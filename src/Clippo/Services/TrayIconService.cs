@@ -1,6 +1,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using Clippo.Core;
 using static Clippo.Interop.NativeMethods;
 
 namespace Clippo.Services;
@@ -91,11 +92,11 @@ internal sealed class TrayIconService : IDisposable
         var menu = CreatePopupMenu();
         try
         {
-            AppendMenu(menu, MF_STRING, CmdOpen, "Open Clippo");
-            AppendMenu(menu, MF_STRING, CmdClear, "Geschiedenis wissen");
-            AppendMenu(menu, MF_STRING, CmdSettings, "Instellingen");
+            AppendMenu(menu, MF_STRING, CmdOpen, Loc.T("tray.open"));
+            AppendMenu(menu, MF_STRING, CmdClear, Loc.T("tray.clear"));
+            AppendMenu(menu, MF_STRING, CmdSettings, Loc.T("tray.settings"));
             AppendMenu(menu, MF_SEPARATOR, 0, null);
-            AppendMenu(menu, MF_STRING, CmdExit, "Afsluiten");
+            AppendMenu(menu, MF_STRING, CmdExit, Loc.T("tray.exit"));
             SetMenuDefaultItem(menu, CmdOpen, 0);
 
             // Required so the menu closes when the user clicks elsewhere.
@@ -121,7 +122,7 @@ internal sealed class TrayIconService : IDisposable
     private static IntPtr LoadTrayIcon()
     {
         int size = GetSystemMetricsForDpi(SM_CXSMICON, GetDpiForSystem());
-        var resource = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/clippo.ico"));
+        var resource = Application.GetResourceStream(new Uri("pack://application:,,,/Clippo;component/Assets/clippo.ico"));
         using var stream = new MemoryStream();
         resource.Stream.CopyTo(stream);
         var ico = stream.ToArray();

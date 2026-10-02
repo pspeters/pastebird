@@ -48,7 +48,7 @@ Set-Content "$layout\AppxManifest.xml" $manifest -Encoding UTF8
 New-Item -ItemType Directory $priRoot | Out-Null
 Copy-Item "$PSScriptRoot\msix\Assets" "$priRoot\Assets" -Recurse
 Copy-Item "$layout\AppxManifest.xml" $priRoot
-& "$toolDir\makepri.exe" createconfig /cf "$work\priconfig.xml" /dq nl-NL /pv 10.0.0 /o | Out-Null
+& "$toolDir\makepri.exe" createconfig /cf "$work\priconfig.xml" /dq en-US_nl-NL /pv 10.0.0 /o | Out-Null
 # One resources.pri for all scales (no split resource packs; those are only for bundles).
 $priConfig = [xml](Get-Content "$work\priconfig.xml")
 $priConfig.resources.packaging | ForEach-Object { [void]$_.ParentNode.RemoveChild($_) }

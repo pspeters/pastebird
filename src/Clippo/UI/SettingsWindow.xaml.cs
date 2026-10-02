@@ -1,5 +1,8 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using Clippo.Core;
 
 namespace Clippo.UI;
@@ -7,45 +10,54 @@ namespace Clippo.UI;
 /// <summary>The small settings window. Every change applies and saves immediately.</summary>
 public partial class SettingsWindow : Window
 {
-    private const string DefaultHint = "Klik en kies een nieuwe combinatie.";
-    private const string DefaultAutoStartHint = "Clippo start automatisch op de achtergrond na het aanmelden.";
-
     private readonly App _app;
+    private string _autoStartHintKey = "settings.autostart.desc";
+    private string _hotkeyHint = "";
+    private bool _updatingLists;
 
     public SettingsWindow(App app)
     {
         InitializeComponent();
         _app = app;
         var settings = app.Settings;
+        MaxHeight = SystemParameters.WorkArea.Height - 40;
 
         AutoStartBox.IsChecked = settings.StartWithWindows;
         AutoPasteBox.IsChecked = settings.PasteAutomatically;
         HotkeyBox.Text = settings.Hotkey.ToString();
-        HistorySizeBox.ItemsSource = AppSettings.HistorySizes.Select(n => $"{n} items").ToList();
-        HistorySizeBox.SelectedIndex = Array.IndexOf(AppSettings.HistorySizes, settings.MaxItems);
-        FooterText.Text = $"Clippo {typeof(App).Assembly.GetName().Version?.ToString(3)} · Alle gegevens blijven lokaal op deze pc.";
+        AppIcon.Source = LoadLargestIconFrame();
+        UpdateTexts();
+
+        Loc.Instance.PropertyChanged += OnLanguageChanged;
+        Closed += (_, _) => Loc.Instance.PropertyChanged -= OnLanguageChanged;
 
         AutoStartBox.Click += async (_, _) =>
         {
             bool wanted = AutoStartBox.IsChecked == true;
             bool actual = await _app.SetAutoStartAsync(wanted);
             AutoStartBox.IsChecked = actual;
-            AutoStartHint.Text = wanted && !actual
-                ? "Windows staat dit niet toe. Zet Clippo aan via Taakbeheer → Opstart-apps."
-                : DefaultAutoStartHint;
+            _autoStartHintKey = wanted && !actual ? "settings.autostart.denied" : "settings.autostart.desc";
+            UpdateTexts();
         };
         AutoPasteBox.Click += (_, _) => _app.SetAutoPaste(AutoPasteBox.IsChecked == true);
         HistorySizeBox.SelectionChanged += (_, _) =>
         {
-            if (HistorySizeBox.SelectedIndex >= 0)
+            if (!_updatingLists && HistorySizeBox.SelectedIndex >= 0)
                 _app.SetMaxItems(AppSettings.HistorySizes[HistorySizeBox.SelectedIndex]);
         };
+        LanguageBox.SelectionChanged += (_, _) =>
+        {
+            if (!_updatingLists && LanguageBox.SelectedIndex >= 0)
+                _app.SetLanguage((AppLanguage)LanguageBox.SelectedIndex);
+        };
         ClearButton.Click += (_, _) => _app.ClearHistory(confirmOwner: this);
+        GitHubButton.Click += (_, _) => OpenUrl(AppInfo.GitHubUrl);
+        DonateButton.Click += (_, _) => OpenUrl(AppInfo.DonateUrl);
 
         HotkeyBox.GotKeyboardFocus += (_, _) =>
         {
             _app.SuspendHotkey(); // otherwise the current shortcut would open the popup instead
-            HotkeyBox.Text = "Druk op toetsen…";
+            HotkeyBox.Text = Loc.T("settings.hotkey.press");
         };
         HotkeyBox.LostKeyboardFocus += (_, _) =>
         {
@@ -54,6 +66,28 @@ public partial class SettingsWindow : Window
         };
         HotkeyBox.PreviewKeyDown += OnHotkeyKeyDown;
         KeyDown += (_, e) => { if (e.Key == Key.Escape) Close(); };
+    }
+
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        UpdateTexts();
+        if (!HotkeyBox.IsKeyboardFocused)
+            HotkeyBox.Text = _app.Settings.Hotkey.ToString(); // key names like "Space" are translated too
+    }
+
+    /// <summary>Texts that are built in code (everything else binds to <see cref="Loc"/> in XAML).</summary>
+    private void UpdateTexts()
+    {
+        AutoStartHint.Text = Loc.T(_autoStartHintKey);
+        HotkeyHint.Text = _hotkeyHint.Length > 0 ? _hotkeyHint : Loc.T("settings.hotkey.desc");
+        VersionText.Text = $"{Loc.T("about.version", AppInfo.Version)} · {Loc.T("about.license")}";
+
+        _updatingLists = true;
+        HistorySizeBox.ItemsSource = AppSettings.HistorySizes.Select(n => Loc.T("settings.history.items", n)).ToList();
+        HistorySizeBox.SelectedIndex = Array.IndexOf(AppSettings.HistorySizes, _app.Settings.MaxItems);
+        LanguageBox.ItemsSource = new[] { Loc.T("settings.language.system"), "English", "Nederlands" };
+        LanguageBox.SelectedIndex = (int)_app.Settings.Language;
+        _updatingLists = false;
     }
 
     private void OnHotkeyKeyDown(object sender, KeyEventArgs e)
@@ -74,19 +108,28 @@ public partial class SettingsWindow : Window
 
         var hotkey = Hotkey.FromWpf(Keyboard.Modifiers, key);
         if (!hotkey.IsValid)
+            _hotkeyHint = Loc.T("settings.hotkey.modifier");
+        else if (_app.TrySetHotkey(hotkey))
         {
-            HotkeyHint.Text = "Gebruik minstens Ctrl, Alt of Win in de combinatie.";
-            return;
-        }
-
-        if (_app.TrySetHotkey(hotkey))
-        {
-            HotkeyHint.Text = DefaultHint;
+            _hotkeyHint = "";
             Focus();
         }
         else
-        {
-            HotkeyHint.Text = $"{hotkey} is al in gebruik door een ander programma.";
-        }
+            _hotkeyHint = Loc.T("settings.hotkey.taken", hotkey);
+
+        UpdateTexts();
+    }
+
+    private static BitmapSource LoadLargestIconFrame()
+    {
+        var decoder = BitmapDecoder.Create(new Uri("pack://application:,,,/Clippo;component/Assets/clippo.ico"),
+            BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+        return decoder.Frames.OrderByDescending(f => f.PixelWidth).First();
+    }
+
+    private static void OpenUrl(string url)
+    {
+        try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+        catch (Exception ex) { LocalStorage.Log(ex); }
     }
 }

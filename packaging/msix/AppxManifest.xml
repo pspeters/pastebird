@@ -13,7 +13,7 @@
     <DisplayName>Clippo</DisplayName>
     <PublisherDisplayName>$PublisherDisplayName$</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
-    <Description>Eenvoudige, snelle clipboard manager. Ctrl+Shift+V, typen, Enter.</Description>
+    <Description>Simple, fast clipboard manager. Ctrl+Shift+V, type, Enter.</Description>
   </Properties>
 
   <Dependencies>
@@ -21,6 +21,7 @@
   </Dependencies>
 
   <Resources>
+    <Resource Language="en-US" />
     <Resource Language="nl-NL" />
   </Resources>
 
@@ -28,7 +29,7 @@
     <Application Id="Clippo" Executable="Clippo.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="Clippo"
-        Description="Clipboardgeschiedenis met Ctrl+Shift+V"
+        Description="Clipboard history with Ctrl+Shift+V"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png" />

@@ -66,6 +66,7 @@ public partial class App : Application
         _storage = new LocalStorage();
         bool firstRun = !_storage.SettingsExist;
         Settings = _storage.LoadSettings();
+        Loc.Apply(Settings.Language);
         _history = new ClipboardHistory(_storage.LoadHistory(), Settings.MaxItems);
 
         // Save shortly after changes instead of on every copy.
@@ -99,13 +100,11 @@ public partial class App : Application
         if (firstRun)
         {
             _storage.SaveSettings(Settings);
-            _tray.ShowNotification("Clippo draait op de achtergrond",
-                $"Druk op {Settings.Hotkey} om je klembordgeschiedenis te openen.");
+            _tray.ShowNotification(Loc.T("notify.running.title"), Loc.T("notify.running.text", Settings.Hotkey));
         }
         if (!hotkeyRegistered)
         {
-            _tray.ShowNotification("Sneltoets niet beschikbaar",
-                $"{Settings.Hotkey} wordt al door een ander programma gebruikt. Kies een andere sneltoets via Instellingen.");
+            _tray.ShowNotification(Loc.T("notify.hotkey.title"), Loc.T("notify.hotkey.text", Settings.Hotkey));
         }
 
         _showSignal = new EventWaitHandle(false, EventResetMode.AutoReset, $@"Local\{InstanceId}-Show");
@@ -210,6 +209,13 @@ public partial class App : Application
         _storage.SaveSettings(Settings);
     }
 
+    public void SetLanguage(AppLanguage language)
+    {
+        Settings.Language = language;
+        _storage.SaveSettings(Settings);
+        Loc.Apply(language);
+    }
+
     public void SetMaxItems(int maxItems)
     {
         Settings.MaxItems = maxItems;
@@ -247,7 +253,7 @@ public partial class App : Application
     {
         if (_history.Items.Count == 0) return;
 
-        const string question = "Wil je de volledige clipboardgeschiedenis wissen?";
+        var question = Loc.T("clear.confirm");
         var answer = confirmOwner is null
             ? MessageBox.Show(question, "Clippo", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No)
             : MessageBox.Show(confirmOwner, question, "Clippo", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);

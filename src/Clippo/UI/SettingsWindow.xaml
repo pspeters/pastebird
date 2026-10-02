@@ -1,7 +1,8 @@
 <Window x:Class="Clippo.UI.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Clippo-instellingen"
+        xmlns:core="clr-namespace:Clippo.Core"
+        Title="{Binding [settings.title], Source={x:Static core:Loc.Instance}}"
         Width="500"
         SizeToContent="Height"
         ResizeMode="NoResize"
@@ -24,81 +25,129 @@
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="Margin" Value="0,2,0,0" />
         </Style>
+        <Style x:Key="Section" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="2,14,0,6" />
+        </Style>
     </Window.Resources>
 
-    <StackPanel Margin="20,16,20,18">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20,16,20,18">
 
-        <Border Style="{StaticResource Card}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock Text="Starten met Windows" />
-                    <TextBlock x:Name="AutoStartHint" Style="{StaticResource Description}" Text="Clippo start automatisch op de achtergrond na het aanmelden." />
-                </StackPanel>
-                <CheckBox x:Name="AutoStartBox" Grid.Column="1" MinWidth="0" VerticalAlignment="Center" />
-            </Grid>
-        </Border>
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding [settings.autostart], Source={x:Static core:Loc.Instance}}" />
+                        <TextBlock x:Name="AutoStartHint" Style="{StaticResource Description}" />
+                    </StackPanel>
+                    <CheckBox x:Name="AutoStartBox" Grid.Column="1" MinWidth="0" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
 
-        <Border Style="{StaticResource Card}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock Text="Automatisch plakken" />
-                    <TextBlock Style="{StaticResource Description}" Text="Plak het gekozen item direct in het venster waar je was. Shift+Enter kopieert alleen." />
-                </StackPanel>
-                <CheckBox x:Name="AutoPasteBox" Grid.Column="1" MinWidth="0" VerticalAlignment="Center" />
-            </Grid>
-        </Border>
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding [settings.autopaste], Source={x:Static core:Loc.Instance}}" />
+                        <TextBlock Style="{StaticResource Description}" Text="{Binding [settings.autopaste.desc], Source={x:Static core:Loc.Instance}}" />
+                    </StackPanel>
+                    <CheckBox x:Name="AutoPasteBox" Grid.Column="1" MinWidth="0" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
 
-        <Border Style="{StaticResource Card}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock Text="Sneltoets" />
-                    <TextBlock x:Name="HotkeyHint" Style="{StaticResource Description}" Text="Klik en kies een nieuwe combinatie." />
-                </StackPanel>
-                <TextBox x:Name="HotkeyBox" Grid.Column="1" Width="170" IsReadOnly="True" IsReadOnlyCaretVisible="False"
-                         TextAlignment="Center" VerticalAlignment="Center" Cursor="Hand" />
-            </Grid>
-        </Border>
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding [settings.hotkey], Source={x:Static core:Loc.Instance}}" />
+                        <TextBlock x:Name="HotkeyHint" Style="{StaticResource Description}" />
+                    </StackPanel>
+                    <TextBox x:Name="HotkeyBox" Grid.Column="1" Width="170" IsReadOnly="True" IsReadOnlyCaretVisible="False"
+                             TextAlignment="Center" VerticalAlignment="Center" Cursor="Hand" />
+                </Grid>
+            </Border>
 
-        <Border Style="{StaticResource Card}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock Text="Geschiedenis" />
-                    <TextBlock Style="{StaticResource Description}" Text="Aantal items dat Clippo onthoudt." />
-                </StackPanel>
-                <ComboBox x:Name="HistorySizeBox" Grid.Column="1" Width="170" VerticalAlignment="Center" />
-            </Grid>
-        </Border>
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding [settings.history], Source={x:Static core:Loc.Instance}}" />
+                        <TextBlock Style="{StaticResource Description}" Text="{Binding [settings.history.desc], Source={x:Static core:Loc.Instance}}" />
+                    </StackPanel>
+                    <ComboBox x:Name="HistorySizeBox" Grid.Column="1" Width="170" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
 
-        <Border Style="{StaticResource Card}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock Text="Geschiedenis wissen" />
-                    <TextBlock Style="{StaticResource Description}" Text="Verwijdert alle bewaarde clipboard-items." />
-                </StackPanel>
-                <Button x:Name="ClearButton" Grid.Column="1" Content="Wissen…" Width="170" VerticalAlignment="Center" />
-            </Grid>
-        </Border>
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding [settings.language], Source={x:Static core:Loc.Instance}}" />
+                        <TextBlock Style="{StaticResource Description}" Text="{Binding [settings.language.desc], Source={x:Static core:Loc.Instance}}" />
+                    </StackPanel>
+                    <ComboBox x:Name="LanguageBox" Grid.Column="1" Width="170" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
 
-        <TextBlock x:Name="FooterText" Style="{StaticResource Description}" Margin="2,10,0,0" />
-    </StackPanel>
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding [settings.clear], Source={x:Static core:Loc.Instance}}" />
+                        <TextBlock Style="{StaticResource Description}" Text="{Binding [settings.clear.desc], Source={x:Static core:Loc.Instance}}" />
+                    </StackPanel>
+                    <Button x:Name="ClearButton" Grid.Column="1" Width="170" VerticalAlignment="Center"
+                            Content="{Binding [settings.clear.button], Source={x:Static core:Loc.Instance}}" />
+                </Grid>
+            </Border>
+
+            <!-- About -->
+            <TextBlock Style="{StaticResource Section}" Text="{Binding [about.title], Source={x:Static core:Loc.Instance}}" />
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Image x:Name="AppIcon" Width="40" Height="40" VerticalAlignment="Top" Margin="0,2,14,0"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Clippo" FontSize="15" FontWeight="SemiBold" />
+                        <TextBlock x:Name="VersionText" Style="{StaticResource Description}" />
+                        <TextBlock Style="{StaticResource Description}" Text="{Binding [about.createdBy], Source={x:Static core:Loc.Instance}}" />
+                        <TextBlock Style="{StaticResource Description}" Text="{Binding [about.local], Source={x:Static core:Loc.Instance}}" />
+                        <WrapPanel Margin="0,12,0,0">
+                            <Button x:Name="DonateButton" Margin="0,0,8,4" Style="{DynamicResource AccentButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#x2615;" Margin="0,0,6,0" />
+                                    <TextBlock Text="{Binding [about.donate], Source={x:Static core:Loc.Instance}}" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="GitHubButton" Margin="0,0,8,4"
+                                    Content="{Binding [about.github], Source={x:Static core:Loc.Instance}}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
 </Window>

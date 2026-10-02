@@ -34,7 +34,7 @@ public readonly record struct Hotkey(int Modifiers, int VirtualKey)
     private static string KeyName(Key key) => key switch
     {
         >= Key.D0 and <= Key.D9 => ((char)('0' + (key - Key.D0))).ToString(),
-        Key.Space => "Spatie",
+        Key.Space => Loc.T("key.space"),
         Key.Insert => "Ins",
         Key.OemPeriod => ".",
         Key.OemComma => ",",

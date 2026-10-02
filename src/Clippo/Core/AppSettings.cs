@@ -10,6 +10,7 @@ public sealed class AppSettings
     public bool StartWithWindows { get; set; } = true;
     public bool PasteAutomatically { get; set; } = true;
     public int MaxItems { get; set; } = 200;
+    public AppLanguage Language { get; set; } = AppLanguage.System;
     public int HotkeyModifiers { get; set; } = Hotkey.Default.Modifiers;
     public int HotkeyKey { get; set; } = Hotkey.Default.VirtualKey;
 
@@ -24,6 +25,7 @@ public sealed class AppSettings
     {
         if (!HistorySizes.Contains(MaxItems)) MaxItems = 200;
         if (!Hotkey.IsValid) Hotkey = Hotkey.Default;
+        if (!Enum.IsDefined(Language)) Language = AppLanguage.System;
         return this;
     }
 }

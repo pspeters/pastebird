@@ -113,9 +113,7 @@ public partial class PopupWindow : Window
         bool empty = _results.Count == 0;
         ResultList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         EmptyText.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
-        EmptyText.Text = _history.Items.Count == 0
-            ? "Nog niets gekopieerd. Alles wat je kopieert met Ctrl+C verschijnt hier."
-            : "Geen resultaten";
+        EmptyText.Text = Loc.T(_history.Items.Count == 0 ? "popup.empty" : "popup.noResults");
 
         if (!empty) Select(Math.Clamp(preferredIndex, 0, _results.Count - 1));
     }

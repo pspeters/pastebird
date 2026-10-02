@@ -26,7 +26,7 @@ public sealed class ClipItem
 
     /// <summary>Single-line text shown in the popup.</summary>
     [JsonIgnore]
-    public string Preview => _preview ??= BuildPreview();
+    public string Preview => Kind == ClipKind.Files ? BuildPreview() : _preview ??= BuildPreview(); // file lists contain translated text
 
     /// <summary>Segoe Fluent Icons glyph for the item type.</summary>
     [JsonIgnore]
@@ -47,7 +47,7 @@ public sealed class ClipItem
         {
             var files = Content.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
             if (files.Length > 1)
-                return $"{files.Length} bestanden: " + string.Join(", ", files.Take(6).Select(Path.GetFileName));
+                return Loc.T("item.files", files.Length) + string.Join(", ", files.Take(6).Select(Path.GetFileName));
         }
 
         // Collapse all whitespace (newlines, tabs) so multi-line text fits on one row.

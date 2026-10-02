@@ -1,6 +1,7 @@
 <Window x:Class="Clippo.UI.PopupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:core="clr-namespace:Clippo.Core"
         Title="Clippo"
         Width="520"
         SizeToContent="Height"
@@ -97,7 +98,8 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFont}" FontSize="14"
                            Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,1,14,0" />
-                <TextBlock x:Name="Placeholder" Grid.Column="1" Text="Zoeken in klembord…" FontSize="15"
+                <TextBlock x:Name="Placeholder" Grid.Column="1" FontSize="15"
+                           Text="{Binding [popup.search], Source={x:Static core:Loc.Instance}}"
                            Foreground="{DynamicResource TextTertiary}" VerticalAlignment="Center"
                            Margin="2,0,0,0" IsHitTestVisible="False" />
                 <TextBox x:Name="SearchBox" Grid.Column="1" FontSize="15" VerticalAlignment="Center"
