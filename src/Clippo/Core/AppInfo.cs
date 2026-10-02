@@ -4,7 +4,7 @@ namespace Clippo.Core;
 public static class AppInfo
 {
     public const string GitHubUrl = "https://github.com/pspeters/clippo";
-    public const string DonateUrl = "https://buymeacoffee.com/pspeters";
+    public const string DonateUrl = "https://buymeacoffee.com/PatrickS86";
 
     public static string Version { get; } = typeof(AppInfo).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
 }
