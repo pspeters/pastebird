@@ -3,16 +3,18 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-// Clippo icon: a rounded clipboard with a clip on top and a bold "C" on the board.
+// Pastebird icon: a chubby white bird on a sky-blue tile, carrying a sticky note in its beak (the "paste").
 // Drawn on a 32x32 design grid and scaled per size.
-// Run: dotnet run --project tools/IconGen -- src/Clippo/Assets [packaging/msix/Assets]
+// Run: dotnet run --project tools/IconGen -- src/Pastebird/Assets [packaging/msix/Assets]
 
 var outDir = args.Length > 0 ? args[0] : ".";
 int[] sizes = [16, 20, 24, 32, 40, 48, 64, 256];
 var images = sizes.Select(s => (Size: s, Bitmap: Render(s))).ToList();
 
-WriteIco(Path.Combine(outDir, "clippo.ico"), images);
-Console.WriteLine($"Wrote clippo.ico ({images.Count} sizes) to {Path.GetFullPath(outDir)}");
+WriteIco(Path.Combine(outDir, "pastebird.ico"), images);
+if (Environment.GetEnvironmentVariable("ICON_PREVIEW") is { } preview) // optional 256 px PNG for a quick look
+    File.WriteAllBytes(preview, EncodePng(images[^1].Bitmap));
+Console.WriteLine($"Wrote pastebird.ico ({images.Count} sizes) to {Path.GetFullPath(outDir)}");
 
 // Optional: Microsoft Store (MSIX) assets. Qualified names are resolved by resources.pri (makepri).
 if (args.Length > 1)
@@ -44,31 +46,67 @@ static BitmapSource Render(int size, int canvas = 0)
         dc.PushTransform(new TranslateTransform((canvas - size) / 2.0, (canvas - size) / 2.0));
         dc.PushTransform(new ScaleTransform(size / 32.0, size / 32.0));
 
-        var board = new LinearGradientBrush(Color.FromRgb(0x4A, 0x8C, 0xFF), Color.FromRgb(0x4B, 0x4F, 0xE0), 90);
-        var outline = new SolidColorBrush(Color.FromRgb(0x2B, 0x33, 0x9E));
+        bool small = size <= 20; // tray sizes: fewer details, bolder shapes
+
+        var sky = new LinearGradientBrush(Color.FromRgb(0x38, 0xBD, 0xF8), Color.FromRgb(0x25, 0x5F, 0xEB), 90);
         var white = Brushes.White;
+        var wing = new SolidColorBrush(Color.FromRgb(0xBF, 0xDB, 0xFE));
+        var beak = new SolidColorBrush(Color.FromRgb(0xF5, 0x9E, 0x0B));
+        var eye = new SolidColorBrush(Color.FromRgb(0x1E, 0x29, 0x3B));
+        var note = new SolidColorBrush(Color.FromRgb(0xFE, 0xF0, 0x8A));
+        var noteLine = new SolidColorBrush(Color.FromRgb(0xCA, 0x8A, 0x04));
 
-        // Board
-        dc.DrawRoundedRectangle(board, null, new Rect(4, 5, 24, 26), 4.5, 4.5);
+        // Tile
+        dc.DrawRoundedRectangle(sky, null, new Rect(2, 2, 28, 28), 7, 7);
 
-        // Clip (white pill with a dark rim so it separates from the board)
-        double rim = size <= 20 ? 2 : 1.5;
-        dc.DrawRoundedRectangle(outline, null, new Rect(10 - rim / 2, 2 - rim / 2, 12 + rim, 6 + rim), 2.5, 2.5);
-        dc.DrawRoundedRectangle(white, null, new Rect(10, 2, 12, 6), 2, 2);
-
-        // "C"
-        double cx = 16, cy = 19.5, r = size <= 20 ? 5.5 : 5.75;
-        double stroke = size <= 20 ? 3.5 : 3.25;
-        double a = 50 * Math.PI / 180;
-        var start = new Point(cx + r * Math.Cos(a), cy - r * Math.Sin(a));
-        var end = new Point(cx + r * Math.Cos(a), cy + r * Math.Sin(a));
-        var arc = new StreamGeometry();
-        using (var g = arc.Open())
+        // Note held in the beak (the "paste"), behind the beak
+        if (!small)
         {
-            g.BeginFigure(start, false, false);
-            g.ArcTo(end, new Size(r, r), 0, true, SweepDirection.Counterclockwise, true, true);
+            dc.PushTransform(new RotateTransform(14, 26.5, 19));
+            dc.DrawRoundedRectangle(note, null, new Rect(23.5, 15.5, 6, 7), 1, 1);
+            var line = new Pen(noteLine, 0.6);
+            dc.DrawLine(line, new Point(24.8, 18), new Point(28.2, 18));
+            dc.DrawLine(line, new Point(24.8, 19.8), new Point(27.4, 19.8));
+            dc.Pop();
         }
-        dc.DrawGeometry(null, new Pen(white, stroke) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round }, arc);
+
+        // Beak
+        var beakShape = new StreamGeometry();
+        using (var g = beakShape.Open())
+        {
+            g.BeginFigure(new Point(22.5, 11.6), true, true);
+            g.LineTo(new Point(small ? 27.5 : 27, 13.9), true, true);
+            g.LineTo(new Point(22.5, 16.2), true, true);
+        }
+        dc.DrawGeometry(beak, null, beakShape);
+
+        // Chubby bird: round body + head + tail, as one white shape
+        var tail = new StreamGeometry();
+        using (var g = tail.Open())
+        {
+            g.BeginFigure(new Point(9.5, 16.5), true, true);
+            g.LineTo(new Point(4, 11.5), true, true);
+            g.LineTo(new Point(6.5, 21.5), true, true);
+        }
+        Geometry bird = new CombinedGeometry(GeometryCombineMode.Union,
+            new EllipseGeometry(new Point(14.5, 19), 9, 8),
+            new EllipseGeometry(new Point(18.5, 13.5), 5.5, 5.5));
+        bird = new CombinedGeometry(GeometryCombineMode.Union, bird, tail);
+        dc.DrawGeometry(white, null, bird);
+
+        // Wing
+        var wingShape = new StreamGeometry();
+        using (var g = wingShape.Open())
+        {
+            g.BeginFigure(new Point(8, 18), true, true);
+            g.QuadraticBezierTo(new Point(13.5, 13.5), new Point(19, 18.5), true, true);
+            g.QuadraticBezierTo(new Point(13, 24.5), new Point(8, 18), true, true);
+        }
+        dc.DrawGeometry(wing, null, wingShape);
+
+        // Eye
+        if (!small)
+            dc.DrawEllipse(eye, null, new Point(20, 12.3), 1.25, 1.25);
     }
 
     var bitmap = new RenderTargetBitmap(canvas, canvas, 96, 96, PixelFormats.Pbgra32);

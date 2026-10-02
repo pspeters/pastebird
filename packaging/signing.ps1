@@ -2,7 +2,7 @@
 #
 # The certificate is found by thumbprint in the Windows certificate store (CurrentUser\My). That covers
 # USB tokens (SafeNet/YubiKey) and cloud HSMs that present a virtual smart card (e.g. Certum SimplySign).
-# Configure it in packaging\signing.json (see signing.example.json) or with $env:CLIPPO_CERT_THUMBPRINT.
+# Configure it in packaging\signing.json (see signing.example.json) or with $env:PASTEBIRD_CERT_THUMBPRINT.
 
 function Get-SdkToolDir {
     # makeappx, makepri and signtool from NuGet (Microsoft.Windows.SDK.BuildTools); no Windows SDK install needed.
@@ -21,11 +21,11 @@ function Get-SigningConfig {
     $file = Join-Path $PSScriptRoot 'signing.json'
     if (Test-Path $file) { $config = Get-Content $file -Raw | ConvertFrom-Json }
 
-    $thumbprint = if ($env:CLIPPO_CERT_THUMBPRINT) { $env:CLIPPO_CERT_THUMBPRINT } elseif ($config) { $config.Thumbprint } else { $null }
+    $thumbprint = if ($env:PASTEBIRD_CERT_THUMBPRINT) { $env:PASTEBIRD_CERT_THUMBPRINT } elseif ($config) { $config.Thumbprint } else { $null }
     if (-not $thumbprint) { return $null }
     $thumbprint = ($thumbprint -replace '[^0-9A-Fa-f]', '').ToUpperInvariant()
 
-    $timestamp = if ($env:CLIPPO_TIMESTAMP_URL) { $env:CLIPPO_TIMESTAMP_URL }
+    $timestamp = if ($env:PASTEBIRD_TIMESTAMP_URL) { $env:PASTEBIRD_TIMESTAMP_URL }
                  elseif ($config -and $config.TimestampUrl) { $config.TimestampUrl }
                  else { 'http://timestamp.digicert.com' }
 
@@ -39,7 +39,7 @@ function Get-SigningConfig {
 
 function Get-SignArguments($signing) {
     # SHA-256 file digest + RFC 3161 timestamp, so signatures stay valid after the certificate expires.
-    return @('sign', '/fd', 'sha256', '/tr', $signing.TimestampUrl, '/td', 'sha256', '/sha1', $signing.Thumbprint, '/d', 'Clippo')
+    return @('sign', '/fd', 'sha256', '/tr', $signing.TimestampUrl, '/td', 'sha256', '/sha1', $signing.Thumbprint, '/d', 'Pastebird')
 }
 
 function Invoke-Sign($toolDir, $signing, [string[]]$files) {

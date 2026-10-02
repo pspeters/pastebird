@@ -1,10 +1,12 @@
-# Clippo
+<p align="center"><img src="docs/logo.png" width="112" alt="Pastebird logo"></p>
+
+# Pastebird
 
 A dead-simple, fast clipboard manager for Windows 10 and 11.
 
 **Ctrl+C → later Ctrl+Shift+V → type → Enter → done.**
 
-Clippo runs quietly in the system tray and remembers what you copy: text, URLs, file paths and copied files. One shortcut opens a small popup where you search and paste.
+Pastebird runs quietly in the system tray and remembers what you copy: text, URLs, file paths and copied files. One shortcut opens a small popup where you search and paste.
 
 - No main window, no toolbar, no clutter.
 - Keyboard-first: everything works without a mouse.
@@ -16,7 +18,7 @@ Clippo runs quietly in the system tray and remembers what you copy: text, URLs, 
 
 | Key | Action |
 |---|---|
-| `Ctrl + Shift + V` | Open Clippo (press again to close) |
+| `Ctrl + Shift + V` | Open Pastebird (press again to close) |
 | type | Fuzzy search (`proj` finds `C:\Projects\website\index.php`) |
 | `↑` / `↓`, `PgUp` / `PgDn` | Navigate |
 | `Enter` | Put the item on the clipboard and paste it into the previous window |
@@ -25,14 +27,14 @@ Clippo runs quietly in the system tray and remembers what you copy: text, URLs, 
 | `Ctrl + Delete` | Clear the entire history |
 | `Esc` | Close |
 
-- **Click the tray icon** to open the popup next to the icon. **Right-click** for Open Clippo · Clear history · Settings · Exit.
-- Starting Clippo again opens the popup of the running instance.
-- Copying or choosing an item again moves it to the top. Clippo never stores duplicates.
+- **Click the tray icon** to open the popup next to the icon. **Right-click** for Open Pastebird · Clear history · Settings · Exit.
+- Starting Pastebird again opens the popup of the running instance.
+- Copying or choosing an item again moves it to the top. Pastebird never stores duplicates.
 - Copied files are restored as real files, so pasting in Explorer works, and also as text (the path).
 
 ## Settings
 
-Clippo works out of the box, so you shouldn't need Settings. They cover:
+Pastebird works out of the box, so you shouldn't need Settings. They cover:
 
 - **Start with Windows** (on by default)
 - **Paste automatically** (on by default)
@@ -45,7 +47,7 @@ Settings also has an **About** section with the version, license and links to th
 
 ## Privacy
 
-- Everything stays in `%LOCALAPPDATA%\Clippo` on your pc: no network, accounts, telemetry or cloud.
+- Everything stays in `%LOCALAPPDATA%\Pastebird` on your pc: no network, accounts, telemetry or cloud.
 - `history.dat` is encrypted with Windows DPAPI for your user account. Other accounts and other machines can't read it.
 - Content that password managers mark as private (`ExcludeClipboardContentFromMonitorProcessing`, `CanIncludeInClipboardHistory = 0`) is never stored.
 - Items larger than 200,000 characters are skipped, and the history size is capped.
@@ -55,16 +57,16 @@ Settings also has an **About** section with the version, license and links to th
 Requires the .NET 10 SDK on Windows.
 
 ```bash
-dotnet build src/Clippo -c Release
+dotnet build src/Pastebird -c Release
 ```
 
-To publish a single `Clippo.exe`, which requires the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0):
+To publish a single `Pastebird.exe`, which requires the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0):
 
 ```bash
-dotnet publish src/Clippo -p:PublishProfile=win-x64
+dotnet publish src/Pastebird -p:PublishProfile=win-x64
 ```
 
-The output goes to `publish\Clippo.exe`.
+The output goes to `publish\Pastebird.exe`.
 
 ### Installer
 
@@ -74,17 +76,17 @@ Requires [Inno Setup 6](https://jrsoftware.org/isdl.php).
 powershell -ExecutionPolicy Bypass -File installer/build-installer.ps1
 ```
 
-This creates `publish\ClippoSetup-<version>.exe` (about 42 MB). It includes .NET, so the target pc needs no runtime.
+This creates `publish\PastebirdSetup-<version>.exe` (about 42 MB). It includes .NET, so the target pc needs no runtime.
 
-- Installs per user in `%LOCALAPPDATA%\Programs\Clippo`, without admin rights.
-- Adds a Start menu shortcut and starts Clippo right after installation.
-- A newer installer updates a running Clippo in place.
+- Installs per user in `%LOCALAPPDATA%\Programs\Pastebird`, without admin rights.
+- Adds a Start menu shortcut and starts Pastebird right after installation.
+- A newer installer updates a running Pastebird in place.
 - Uninstalling (Settings → Apps) also removes autostart and the stored history.
-- The version number comes from `<Version>` in `Clippo.csproj`.
+- The version number comes from `<Version>` in `Pastebird.csproj`.
 
 ### Code signing (OV certificate)
 
-Without a signature, Windows shows "Unknown publisher". With an OV certificate, `build-installer.ps1` signs three files, each with a timestamp: `Clippo.exe`, the installer and the uninstaller.
+Without a signature, Windows shows "Unknown publisher". With an OV certificate, `build-installer.ps1` signs three files, each with a timestamp: `Pastebird.exe`, the installer and the uninstaller.
 
 1. Buy an OV code signing certificate, for example from Certum, Sectigo or SSL.com. The private key must live on a USB token or in a cloud HSM.
 2. Install the vendor's software and connect the token, or sign in to the cloud HSM (such as Certum SimplySign). The certificate then appears in your Windows certificate store.
@@ -101,7 +103,7 @@ Without a signature, Windows shows "Unknown publisher". With an OV certificate, 
 
 5. Build as usual with `installer/build-installer.ps1`. With a token, Windows asks for your PIN.
 
-Without `signing.json` the script builds an unsigned installer and prints a warning. You can also pass the thumbprint via `$env:CLIPPO_CERT_THUMBPRINT`, which is handy in CI.
+Without `signing.json` the script builds an unsigned installer and prints a warning. You can also pass the thumbprint via `$env:PASTEBIRD_CERT_THUMBPRINT`, which is handy in CI.
 
 `build-msix.ps1 -Sign` signs the MSIX package for distribution outside the Store. For that, `Publisher` in `store-identity.json` must match the certificate subject.
 
@@ -113,9 +115,9 @@ Even signed builds may trigger SmartScreen for a new certificate until enough pe
 powershell -ExecutionPolicy Bypass -File packaging/build-msix.ps1
 ```
 
-This creates `publish\Clippo_<version>.0_x64.msix` (about 60 MB). The tools (`makeappx`, `makepri`, `signtool`) come from the NuGet package `Microsoft.Windows.SDK.BuildTools`, so you don't need to install the Windows SDK.
+This creates `publish\Pastebird_<version>.0_x64.msix` (about 60 MB). The tools (`makeappx`, `makepri`, `signtool`) come from the NuGet package `Microsoft.Windows.SDK.BuildTools`, so you don't need to install the Windows SDK.
 
-The Store build (`-p:ClippoMsix=true`) differs in one way: autostart uses the package's `StartupTask` instead of the registry. Users can turn it off in Clippo or in Task Manager → Startup apps. In a Store install, history and settings are removed automatically on uninstall.
+The Store build (`-p:PastebirdMsix=true`) differs in one way: autostart uses the package's `StartupTask` instead of the registry. Users can turn it off in Pastebird or in Task Manager → Startup apps. In a Store install, history and settings are removed automatically on uninstall.
 
 **Publishing**
 
@@ -134,7 +136,7 @@ The Store build (`-p:ClippoMsix=true`) differs in one way: autostart uses the pa
    - privacy policy URL
 6. Partner Center asks you to justify the `runFullTrust` capability. For example: *"Classic WPF desktop app that uses a tray icon, a global hotkey and clipboard monitoring. All data stays local."*
 7. Certification usually takes a few business days. After that, updates reach users automatically.
-8. Bump `<Version>` in `Clippo.csproj` for every update.
+8. Bump `<Version>` in `Pastebird.csproj` for every update.
 
 **Testing locally before upload**
 
@@ -145,15 +147,17 @@ The Store build (`-p:ClippoMsix=true`) differs in one way: autostart uses the pa
 To regenerate the icon and Store assets:
 
 ```bash
-dotnet run --project tools/IconGen -- src/Clippo/Assets packaging/msix/Assets
+dotnet run --project tools/IconGen -- src/Pastebird/Assets packaging/msix/Assets
 ```
+
+Set `ICON_PREVIEW=docs\logo.png` first to refresh the logo shown at the top of this README.
 
 ## Design and structure
 
 C# / .NET 10 / WPF, with no NuGet dependencies.
 
 ```
-src/Clippo/
+src/Pastebird/
   App.xaml(.cs)              startup, single instance, wires the services together
   Core/
     ClipItem.cs              data model (id, content, type, copied at, last used)
@@ -161,7 +165,7 @@ src/Clippo/
     FuzzySearch.cs           realtime search (substring > subsequence, then recency)
     Localization.cs          English and Dutch UI strings, switchable at runtime
     AppSettings.cs, Hotkey.cs, AppInfo.cs
-    LocalStorage.cs          JSON + DPAPI in %LOCALAPPDATA%\Clippo, written atomically
+    LocalStorage.cs          JSON + DPAPI in %LOCALAPPDATA%\Pastebird, written atomically
   Services/
     MessageWindow.cs         one hidden Win32 window for all system messages
     ClipboardMonitor.cs      AddClipboardFormatListener, reading and restoring items
@@ -177,15 +181,15 @@ packaging/                   MSIX manifest, Store assets, signing helpers
 tools/IconGen/               generates the app icon and Store assets
 ```
 
-Why WPF and not WinUI 3: WinUI 3 has no API for tray icons or global hotkeys, so it would need Win32 interop anyway, on top of the Windows App SDK runtime and a slower startup. WPF gives the same native integration with fewer layers. The popup uses the real Windows 11 system backdrop through DWM. Clippo renders in software mode: for such a small UI it is just as fast, and it roughly halves memory use (about 55 MB instead of 120 MB).
+Why WPF and not WinUI 3: WinUI 3 has no API for tray icons or global hotkeys, so it would need Win32 interop anyway, on top of the Windows App SDK runtime and a slower startup. WPF gives the same native integration with fewer layers. The popup uses the real Windows 11 system backdrop through DWM. Pastebird renders in software mode: for such a small UI it is just as fast, and it roughly halves memory use (about 55 MB instead of 120 MB).
 
-Automatic paste sends `Ctrl+V` to the window that was active before Clippo opened. It only does so when that window is active again and no modifier keys are held down. Otherwise the item simply stays on the clipboard. Windows blocks this for elevated (admin) windows; press `Ctrl+V` yourself there. You can turn automatic paste off in Settings.
+Automatic paste sends `Ctrl+V` to the window that was active before Pastebird opened. It only does so when that window is active again and no modifier keys are held down. Otherwise the item simply stays on the clipboard. Windows blocks this for elevated (admin) windows; press `Ctrl+V` yourself there. You can turn automatic paste off in Settings.
 
-Note: in some programs (Chrome, Word, Teams) `Ctrl+Shift+V` means "paste without formatting". Clippo takes over that shortcut system-wide. Pick a different shortcut in Settings if you prefer.
+Note: in some programs (Chrome, Word, Teams) `Ctrl+Shift+V` means "paste without formatting". Pastebird takes over that shortcut system-wide. Pick a different shortcut in Settings if you prefer.
 
 ## Support
 
-Clippo is free and open source. If it saves you time, you can [buy me a coffee](https://buymeacoffee.com/pspeters) ☕
+Pastebird is free and open source. If it saves you time, you can [buy me a coffee](https://buymeacoffee.com/pspeters) ☕
 
 ## License
 
