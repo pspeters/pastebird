@@ -2,7 +2,7 @@
 
 # Pastebird
 
-A dead-simple, fast clipboard manager for Windows 10 and 11.
+A dead-simple, fast clipboard manager for Windows 11.
 
 **Ctrl+C → later Ctrl+Shift+V → type → Enter → done.**
 
@@ -18,7 +18,7 @@ Pastebird runs quietly in the system tray and remembers what you copy: text, URL
 
 Get the latest installer (`PastebirdSetup-<version>.exe`) from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page and run it.
 
-- Works on Windows 10 and 11. No admin rights and no extra software needed.
+- Requires Windows 11. No admin rights and no extra software needed.
 - Pastebird starts right after installation and lives in the system tray (bottom right, next to the clock).
 - Uninstall through Settings → Apps. This also removes your stored history.
 

@@ -28,7 +28,7 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-MinVersion=10.0.17763
+MinVersion=10.0.22000
 #ifdef Sign
 ; "pastebirdsign" is passed in by build-installer.ps1 (/S switch) and signs setup + uninstaller.
 SignTool=pastebirdsign

@@ -80,8 +80,6 @@ internal static class AutoStart
 /// <summary>Light/dark detection and dark-mode support for native menus.</summary>
 internal static class SystemTheme
 {
-    private static readonly bool SupportsDarkMenus = Environment.OSVersion.Version.Build >= 18362;
-
     public static bool IsDark()
     {
         using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
@@ -91,7 +89,6 @@ internal static class SystemTheme
     /// <summary>Lets native popup menus (the tray menu) follow the Windows app theme.</summary>
     public static void EnableDarkMenus(IntPtr ownerWindow)
     {
-        if (!SupportsDarkMenus) return;
         try
         {
             SetPreferredAppMode(1); // AllowDark
@@ -106,7 +103,6 @@ internal static class SystemTheme
 
     public static void RefreshMenus()
     {
-        if (!SupportsDarkMenus) return;
         try
         {
             RefreshImmersiveColorPolicyState();
