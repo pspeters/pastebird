@@ -64,7 +64,7 @@ Pastebird works out of the box, so you shouldn't need Settings. They cover:
 
 ## Support
 
-Pastebird is free and open source. If it saves you time, you can [buy me a coffee](https://buymeacoffee.com/PatrickS86) ☕
+Pastebird is free and open source. If it saves you time, you can [buy me a coffee](https://buymeacoffee.com/pastebird) ☕
 
 Found a bug or have an idea? [Open an issue](https://github.com/pspeters/pastebird/issues).
 
