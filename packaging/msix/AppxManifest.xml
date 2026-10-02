@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Template: $TOKENS$ are filled in by packaging\build-msix.ps1 from store-identity.json and Clippo.csproj. -->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap desktop rescap">
+
+  <Identity Name="$IdentityName$" Publisher="$Publisher$" Version="$Version$" ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Clippo</DisplayName>
+    <PublisherDisplayName>$PublisherDisplayName$</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>Eenvoudige, snelle clipboard manager. Ctrl+Shift+V, typen, Enter.</Description>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="nl-NL" />
+  </Resources>
+
+  <Applications>
+    <Application Id="Clippo" Executable="Clippo.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="Clippo"
+        Description="Clipboardgeschiedenis met Ctrl+Shift+V"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png" />
+
+      <Extensions>
+        <!-- Start with Windows. Clippo enables it on first run (default setting) and the user can turn it off
+             in Clippo's settings or in Task Manager. TaskId must match AutoStart.StartupTaskId. -->
+        <desktop:Extension Category="windows.startupTask" Executable="Clippo.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="ClippoStartup" Enabled="false" DisplayName="Clippo" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Required for every classic desktop app (tray icon, global hotkey, clipboard listener). -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

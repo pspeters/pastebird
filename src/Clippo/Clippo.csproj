@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Clippo</RootNamespace>
+    <AssemblyName>Clippo</AssemblyName>
+    <ApplicationIcon>Assets\clippo.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <Product>Clippo</Product>
+    <Version>1.0.0</Version>
+    <Description>Clippo - simple clipboard history for Windows</Description>
+
+    <!-- Small footprint: no satellite assemblies, workstation non-concurrent GC. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+
+    <!-- Window.ThemeMode (Fluent) is marked experimental in WPF. -->
+    <NoWarn>$(NoWarn);WPF0001</NoWarn>
+  </PropertyGroup>
+
+  <!-- Microsoft Store (MSIX) build: -p:ClippoMsix=true. Adds the WinRT StartupTask API for autostart;
+       the regular build stays free of the (large) Windows SDK projection. -->
+  <PropertyGroup Condition="'$(ClippoMsix)' == 'true'">
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <DefineConstants>$(DefineConstants);MSIX</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\clippo.ico" />
+  </ItemGroup>
+
+</Project>

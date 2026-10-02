@@ -1,0 +1,104 @@
+<Window x:Class="Clippo.UI.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Clippo-instellingen"
+        Width="500"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        ThemeMode="System">
+
+    <Window.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="MinHeight" Value="64" />
+        </Style>
+        <Style x:Key="Description" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,2,0,0" />
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Margin="20,16,20,18">
+
+        <Border Style="{StaticResource Card}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock Text="Starten met Windows" />
+                    <TextBlock x:Name="AutoStartHint" Style="{StaticResource Description}" Text="Clippo start automatisch op de achtergrond na het aanmelden." />
+                </StackPanel>
+                <CheckBox x:Name="AutoStartBox" Grid.Column="1" MinWidth="0" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <Border Style="{StaticResource Card}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock Text="Automatisch plakken" />
+                    <TextBlock Style="{StaticResource Description}" Text="Plak het gekozen item direct in het venster waar je was. Shift+Enter kopieert alleen." />
+                </StackPanel>
+                <CheckBox x:Name="AutoPasteBox" Grid.Column="1" MinWidth="0" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <Border Style="{StaticResource Card}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock Text="Sneltoets" />
+                    <TextBlock x:Name="HotkeyHint" Style="{StaticResource Description}" Text="Klik en kies een nieuwe combinatie." />
+                </StackPanel>
+                <TextBox x:Name="HotkeyBox" Grid.Column="1" Width="170" IsReadOnly="True" IsReadOnlyCaretVisible="False"
+                         TextAlignment="Center" VerticalAlignment="Center" Cursor="Hand" />
+            </Grid>
+        </Border>
+
+        <Border Style="{StaticResource Card}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock Text="Geschiedenis" />
+                    <TextBlock Style="{StaticResource Description}" Text="Aantal items dat Clippo onthoudt." />
+                </StackPanel>
+                <ComboBox x:Name="HistorySizeBox" Grid.Column="1" Width="170" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <Border Style="{StaticResource Card}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock Text="Geschiedenis wissen" />
+                    <TextBlock Style="{StaticResource Description}" Text="Verwijdert alle bewaarde clipboard-items." />
+                </StackPanel>
+                <Button x:Name="ClearButton" Grid.Column="1" Content="Wissen…" Width="170" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <TextBlock x:Name="FooterText" Style="{StaticResource Description}" Margin="2,10,0,0" />
+    </StackPanel>
+</Window>
