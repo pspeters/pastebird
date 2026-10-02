@@ -25,6 +25,7 @@ public enum PopupPlacement
 /// </summary>
 public partial class PopupWindow : Window
 {
+    // The system backdrop API arrived in Windows 11 22H2; the first Windows 11 release (21H2) gets a solid surface.
     private static readonly bool HasSystemBackdrop = Environment.OSVersion.Version.Build >= 22621;
 
     private readonly ClipboardHistory _history;

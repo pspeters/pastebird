@@ -67,7 +67,16 @@ public partial class App : Application
         bool firstRun = !_storage.SettingsExist;
         Settings = _storage.LoadSettings();
         Loc.Apply(Settings.Language);
-        _history = new ClipboardHistory(_storage.LoadHistory(), Settings.MaxItems);
+
+        if (!AppInfo.IsSupportedWindows)
+        {
+            // The installer and the Store package already block this; it catches a copied Pastebird.exe.
+            MessageBox.Show(Loc.T("os.unsupported"), "Pastebird", MessageBoxButton.OK, MessageBoxImage.Information);
+            Shutdown();
+            return;
+        }
+
+        _history =new ClipboardHistory(_storage.LoadHistory(), Settings.MaxItems);
 
         // Save shortly after changes instead of on every copy.
         _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };

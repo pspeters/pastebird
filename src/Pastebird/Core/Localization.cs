@@ -51,6 +51,7 @@ public sealed class Loc : INotifyPropertyChanged
         ["notify.hotkey.title"] = "Shortcut not available",
         ["notify.hotkey.text"] = "{0} is already used by another program. Choose a different shortcut in Settings.",
         ["clear.confirm"] = "Do you want to clear the entire clipboard history?",
+        ["os.unsupported"] = "Pastebird requires Windows 11.\n\nThis version of Windows is not supported.",
 
         ["settings.title"] = "Pastebird settings",
         ["settings.autostart"] = "Start with Windows",
@@ -100,6 +101,7 @@ public sealed class Loc : INotifyPropertyChanged
         ["notify.hotkey.title"] = "Sneltoets niet beschikbaar",
         ["notify.hotkey.text"] = "{0} wordt al door een ander programma gebruikt. Kies een andere sneltoets via Instellingen.",
         ["clear.confirm"] = "Wil je de volledige clipboardgeschiedenis wissen?",
+        ["os.unsupported"] = "Pastebird werkt alleen op Windows 11.\n\nDeze versie van Windows wordt niet ondersteund.",
 
         ["settings.title"] = "Pastebird-instellingen",
         ["settings.autostart"] = "Starten met Windows",

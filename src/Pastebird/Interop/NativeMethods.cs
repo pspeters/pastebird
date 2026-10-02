@@ -98,7 +98,7 @@ internal static class NativeMethods
     public static void SetDwmAttribute(IntPtr hwnd, int attribute, int value)
         => DwmSetWindowAttribute(hwnd, attribute, ref value, sizeof(int));
 
-    // ---- Undocumented uxtheme exports for dark native menus (Windows 10 1903+) ----
+    // ---- Undocumented uxtheme exports for dark native menus ----
     [DllImport("uxtheme.dll", EntryPoint = "#104")] public static extern void RefreshImmersiveColorPolicyState();
     [DllImport("uxtheme.dll", EntryPoint = "#133")] public static extern bool AllowDarkModeForWindow(IntPtr hwnd, bool allow);
     [DllImport("uxtheme.dll", EntryPoint = "#135")] public static extern int SetPreferredAppMode(int mode);
