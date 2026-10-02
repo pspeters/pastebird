@@ -43,7 +43,7 @@ Pastebird works out of the box, so you shouldn't need Settings. They cover:
 - **Language**: system default, English or Dutch
 - **Clear history**
 
-Settings also has an **About** section with the version, license and links to the source code and to [Buy me a coffee](https://buymeacoffee.com/pspeters).
+Settings also has an **About** section with the version, license and links to the source code and to [Buy me a coffee](https://buymeacoffee.com/PatrickS86).
 
 ## Privacy
 
@@ -189,7 +189,7 @@ Note: in some programs (Chrome, Word, Teams) `Ctrl+Shift+V` means "paste without
 
 ## Support
 
-Pastebird is free and open source. If it saves you time, you can [buy me a coffee](https://buymeacoffee.com/pspeters) ☕
+Pastebird is free and open source. If it saves you time, you can [buy me a coffee](https://buymeacoffee.com/PatrickS86) ☕
 
 ## License
 
