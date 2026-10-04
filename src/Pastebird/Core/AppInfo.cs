@@ -4,7 +4,7 @@ namespace Pastebird.Core;
 public static class AppInfo
 {
     public const string GitHubUrl = "https://github.com/pspeters/pastebird";
-    public const string DonateUrl = "https://buymeacoffee.com/pastebird";
+    public const string DonateUrl = "https://ko-fi.com/pastebirdapp";
 
     /// <summary>Pastebird requires Windows 11 (build 22000 or later).</summary>
     public static bool IsSupportedWindows { get; } = Environment.OSVersion.Version.Build >= 22000;
