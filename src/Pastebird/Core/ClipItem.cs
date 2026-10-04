@@ -18,6 +18,9 @@ public sealed class ClipItem
     public DateTime CopiedAt { get; set; }
     public DateTime? LastUsedAt { get; set; }
 
+    /// <summary>Pinned items stay at the top, don't count towards the history size and survive "Clear history".</summary>
+    public bool IsPinned { get; set; }
+
     public ClipKind Kind
     {
         get => _kind;

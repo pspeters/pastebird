@@ -139,12 +139,36 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding Glyph, Mode=OneTime}" FontFamily="{StaticResource IconFont}"
                                        FontSize="14" Foreground="{DynamicResource TextSecondary}"
                                        VerticalAlignment="Center" Margin="0,1,14,0" />
                             <TextBlock Grid.Column="1" Text="{Binding Preview, Mode=OneTime}"
                                        TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <!-- Pin toggle: always shown for pinned items, on hover for the others. Clicking it pins/unpins. -->
+                            <TextBlock x:Name="PinToggle" Grid.Column="2" Tag="PinToggle" FontFamily="{StaticResource IconFont}"
+                                       FontSize="13" Padding="10,2,2,2" Margin="0,-2,-4,-2" Background="Transparent"
+                                       VerticalAlignment="Center" Cursor="Hand"
+                                       ToolTip="{Binding [popup.pin.tooltip], Source={x:Static core:Loc.Instance}}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="&#xE718;" />
+                                        <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+                                        <Setter Property="Visibility" Value="Hidden" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsPinned, Mode=OneTime}" Value="True">
+                                                <Setter Property="Text" Value="&#xE840;" />
+                                                <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

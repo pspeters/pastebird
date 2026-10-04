@@ -132,6 +132,12 @@ public partial class PopupWindow : Window
         ResultList.ScrollIntoView(_results[index]);
     }
 
+    private void TogglePin(ClipItem item)
+    {
+        _history.TogglePin(item); // refreshes the list through OnHistoryChanged
+        Select(_results.IndexOf(item));
+    }
+
     private void Choose(ClipItem item, bool paste)
     {
         HidePopup();
@@ -171,6 +177,10 @@ public partial class PopupWindow : Window
                 else if (ResultList.SelectedItem is ClipItem selected)
                     _history.Remove(selected);
                 break;
+            case Key.P when modifiers == ModifierKeys.Control:
+                if (ResultList.SelectedItem is ClipItem toPin)
+                    TogglePin(toPin);
+                break;
             case Key.Tab:
                 break; // keep focus in the search box
             default:
@@ -184,7 +194,16 @@ public partial class PopupWindow : Window
         if (e.OriginalSource is DependencyObject source
             && ItemsControl.ContainerFromElement(ResultList, source) is ListBoxItem { DataContext: ClipItem item })
         {
-            Choose(item, paste: true);
+            if (source is FrameworkElement { Tag: "PinToggle" })
+            {
+                e.Handled = true;
+                TogglePin(item);
+                Keyboard.Focus(SearchBox);
+            }
+            else
+            {
+                Choose(item, paste: true);
+            }
         }
     }
 

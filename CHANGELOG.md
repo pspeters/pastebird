@@ -14,6 +14,11 @@ The release workflow copies this section into the GitHub release and stops when 
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
 
+## [1.2.0] - Unreleased
+
+### Added
+- Pin items you use often, like a signature or an address: press **Ctrl+P** in the popup or click the pin icon that appears when you hover over an item. Pinned items stay at the top, don't count towards the history size and stay when you clear the history.
+
 ## [1.1.0] - 2026-10-04
 
 ### Added
