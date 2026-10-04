@@ -55,7 +55,7 @@ Pastebird works out of the box, so you shouldn't need Settings. They cover:
 
 ## Updates
 
-Pastebird checks GitHub once a day for a new version. When there is one, a notification appears: click it, or choose **Update to version …** in the tray menu or **Update now** in Settings. Pastebird downloads the new installer, checks it against the checksum GitHub publishes, installs it and restarts by itself. Your history and settings stay.
+Pastebird checks GitHub once a day for a new version. When there is one, a notification appears: click it, or choose **Update to version …** in the tray menu or **Update now** in Settings. Pastebird downloads the new installer, checks it against the checksum GitHub publishes, installs it and restarts by itself. Your history and settings stay. After the restart, a notification lets you know the update worked; click it to see what's new.
 
 You can turn the check off in Settings. The Microsoft Store version is updated by the Store.
 
