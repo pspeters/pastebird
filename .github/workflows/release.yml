@@ -1,0 +1,40 @@
+# Builds the installer on Windows and publishes it as a GitHub release when a version tag (v1.2.3) is pushed.
+# The tag must match <Version> in Pastebird.csproj.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Check version
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content src\Pastebird\Pastebird.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ("v$version" -ne $env:GITHUB_REF_NAME) { throw "Tag $env:GITHUB_REF_NAME does not match <Version>$version</Version> in Pastebird.csproj" }
+          "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Build installer
+        shell: pwsh
+        run: installer\build-installer.ps1 -Unsigned
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create $env:GITHUB_REF_NAME "publish\PastebirdSetup-$env:VERSION.exe" --title "Pastebird $env:VERSION" --notes-file .github\release-notes.md
