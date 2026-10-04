@@ -14,7 +14,7 @@ The release workflow copies this section into the GitHub release and stops when 
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
 
-## [1.3.0] - Unreleased
+## [1.3.0] - 2026-10-04
 
 ### Added
 - After an update, Pastebird lets you know it restarted on the new version. Click the notification to see what's new.
