@@ -105,6 +105,30 @@
                 </Grid>
             </Border>
 
+            <Border x:Name="UpdatesCard" Style="{StaticResource Card}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                            <TextBlock Text="{Binding [settings.updates], Source={x:Static core:Loc.Instance}}" />
+                            <TextBlock Style="{StaticResource Description}" Text="{Binding [settings.updates.desc], Source={x:Static core:Loc.Instance}}" />
+                        </StackPanel>
+                        <CheckBox x:Name="UpdatesBox" Grid.Column="1" MinWidth="0" VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="UpdateStatus" Style="{StaticResource Description}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                        <Button x:Name="UpdateButton" Grid.Column="1" Width="170" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
             <Border Style="{StaticResource Card}">
                 <Grid>
                     <Grid.ColumnDefinitions>

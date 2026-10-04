@@ -14,6 +14,7 @@ public partial class SettingsWindow : Window
     private string _autoStartHintKey = "settings.autostart.desc";
     private string _hotkeyHint = "";
     private bool _updatingLists;
+    private string _updateStatusKey = "";
 
     public SettingsWindow(App app)
     {
@@ -24,12 +25,20 @@ public partial class SettingsWindow : Window
 
         AutoStartBox.IsChecked = settings.StartWithWindows;
         AutoPasteBox.IsChecked = settings.PasteAutomatically;
+        UpdatesBox.IsChecked = settings.CheckForUpdates;
+        if (!app.UpdatesSupported)
+            UpdatesCard.Visibility = Visibility.Collapsed; // the Microsoft Store keeps the Store version up to date
         HotkeyBox.Text = settings.Hotkey.ToString();
         AppIcon.Source = LoadLargestIconFrame();
         UpdateTexts();
 
         Loc.Instance.PropertyChanged += OnLanguageChanged;
-        Closed += (_, _) => Loc.Instance.PropertyChanged -= OnLanguageChanged;
+        _app.UpdateStateChanged += UpdateTexts;
+        Closed += (_, _) =>
+        {
+            Loc.Instance.PropertyChanged -= OnLanguageChanged;
+            _app.UpdateStateChanged -= UpdateTexts;
+        };
 
         AutoStartBox.Click += async (_, _) =>
         {
@@ -40,6 +49,8 @@ public partial class SettingsWindow : Window
             UpdateTexts();
         };
         AutoPasteBox.Click += (_, _) => _app.SetAutoPaste(AutoPasteBox.IsChecked == true);
+        UpdatesBox.Click += (_, _) => _app.SetCheckForUpdates(UpdatesBox.IsChecked == true);
+        UpdateButton.Click += OnUpdateButtonClick;
         HistorySizeBox.SelectionChanged += (_, _) =>
         {
             if (!_updatingLists && HistorySizeBox.SelectedIndex >= 0)
@@ -82,12 +93,44 @@ public partial class SettingsWindow : Window
         HotkeyHint.Text = _hotkeyHint.Length > 0 ? _hotkeyHint : Loc.T("settings.hotkey.desc");
         VersionText.Text = $"{Loc.T("about.version", AppInfo.Version)} · {Loc.T("about.license")}";
 
+        var update = _app.AvailableUpdate;
+        UpdateStatus.Text = update is not null
+            ? Loc.T("settings.updates.available", update.Version.ToString(3))
+            : _updateStatusKey.Length > 0 ? Loc.T(_updateStatusKey) : Loc.T("about.version", AppInfo.Version);
+        UpdateButton.Content = Loc.T(update is not null ? "settings.updates.install" : "settings.updates.check");
+
         _updatingLists = true;
         HistorySizeBox.ItemsSource = AppSettings.HistorySizes.Select(n => Loc.T("settings.history.items", n)).ToList();
         HistorySizeBox.SelectedIndex = Array.IndexOf(AppSettings.HistorySizes, _app.Settings.MaxItems);
         LanguageBox.ItemsSource = new[] { Loc.T("settings.language.system"), "English", "Nederlands" };
         LanguageBox.SelectedIndex = (int)_app.Settings.Language;
         _updatingLists = false;
+    }
+
+    private async void OnUpdateButtonClick(object sender, RoutedEventArgs e)
+    {
+        UpdateButton.IsEnabled = false;
+        try
+        {
+            if (_app.AvailableUpdate is not null)
+            {
+                _updateStatusKey = "settings.updates.installing";
+                UpdateStatus.Text = Loc.T(_updateStatusKey);
+                await _app.InstallUpdateAsync(); // exits Pastebird when the installer starts
+                _updateStatusKey = "settings.updates.failed";
+            }
+            else
+            {
+                UpdateStatus.Text = Loc.T("settings.updates.checking");
+                bool reached = await _app.CheckForUpdatesAsync();
+                _updateStatusKey = !reached ? "settings.updates.offline" : _app.AvailableUpdate is null ? "settings.updates.current" : "";
+            }
+        }
+        finally
+        {
+            UpdateButton.IsEnabled = true;
+            UpdateTexts();
+        }
     }
 
     private void OnHotkeyKeyDown(object sender, KeyEventArgs e)

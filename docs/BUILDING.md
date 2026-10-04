@@ -33,6 +33,11 @@ This creates `publish\PastebirdSetup-<version>.exe` (about 42 MB). It includes .
 - A newer installer updates a running Pastebird in place.
 - Uninstalling (Settings → Apps) also removes autostart and the stored history.
 - The version number comes from `<Version>` in `Pastebird.csproj`.
+- A silent install (`/VERYSILENT`) starts Pastebird afterwards. The built-in updater (`Services/UpdateService.cs`) relies on this: it downloads `PastebirdSetup-*.exe` from the latest GitHub release, verifies its size and SHA-256 digest, runs it silently and exits.
+
+### Releasing
+
+Bump `<Version>` in `Pastebird.csproj`, commit, and push a tag `v<version>` (for example `v1.1.0`). The GitHub Actions workflow `.github/workflows/release.yml` builds the installer on Windows and publishes the release. Installed copies of Pastebird pick it up within a day.
 
 ### Code signing (OV certificate)
 
