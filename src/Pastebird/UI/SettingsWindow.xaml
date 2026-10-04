@@ -166,6 +166,8 @@
                                     <TextBlock Text="{Binding [about.donate], Source={x:Static core:Loc.Instance}}" />
                                 </StackPanel>
                             </Button>
+                            <Button x:Name="WhatsNewButton" Margin="0,0,8,4"
+                                    Content="{Binding [about.whatsnew], Source={x:Static core:Loc.Instance}}" />
                             <Button x:Name="GitHubButton" Margin="0,0,8,4"
                                     Content="{Binding [about.github], Source={x:Static core:Loc.Instance}}" />
                         </WrapPanel>

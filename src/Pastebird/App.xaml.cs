@@ -31,6 +31,7 @@ public partial class App : Application
     private TrayIconService? _tray;
     private PopupWindow? _popup;
     private SettingsWindow? _settingsWindow;
+    private WhatsNewWindow? _whatsNewWindow;
     private UpdateService? _updates;
     private Action? _notificationAction;
     private DispatcherTimer _saveTimer = null!;
@@ -118,6 +119,21 @@ public partial class App : Application
 
         _ = SyncAutoStartAsync(firstRun);
 
+        // Just updated (also from a version that didn't record LastRunVersion yet)? Offer "What's new".
+        var currentVersion = Version.Parse(AppInfo.Version);
+        Version.TryParse(Settings.LastRunVersion, out var previousVersion);
+        bool updated = !firstRun && (previousVersion is null || previousVersion < currentVersion);
+        if (Settings.LastRunVersion != AppInfo.Version)
+        {
+            Settings.LastRunVersion = AppInfo.Version;
+            _storage.SaveSettings(Settings);
+        }
+
+        if (updated)
+        {
+            ShowNotification(Loc.T("notify.updated.title", AppInfo.Version), Loc.T("notify.updated.text"),
+                () => ShowWhatsNew(previousVersion, afterUpdate: true));
+        }
         if (firstRun)
         {
             _storage.SaveSettings(Settings);
@@ -280,6 +296,21 @@ public partial class App : Application
             : MessageBox.Show(confirmOwner, question, "Pastebird", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
         if (answer == MessageBoxResult.Yes)
             _history.Clear();
+    }
+
+    // ---------------------------------------------------------------- what's new
+
+    /// <summary>Shows the changelog entries since <paramref name="since"/> (all entries when null or nothing is newer).</summary>
+    public void ShowWhatsNew(Version? since = null, bool afterUpdate = false)
+    {
+        _whatsNewWindow?.Close();
+        var releases = Changelog.Between(since, Version.Parse(AppInfo.Version));
+        if (releases.Count == 0)
+            releases = Changelog.Load();
+        _whatsNewWindow = new WhatsNewWindow(releases, afterUpdate);
+        _whatsNewWindow.Closed += (_, _) => _whatsNewWindow = null;
+        _whatsNewWindow.Show();
+        _whatsNewWindow.Activate();
     }
 
     // ---------------------------------------------------------------- updates

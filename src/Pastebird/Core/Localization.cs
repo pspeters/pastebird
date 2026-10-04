@@ -99,6 +99,22 @@ public sealed class Loc : INotifyPropertyChanged
         ["about.local"] = "All data stays on this pc. No account, no cloud, no tracking.",
         ["about.github"] = "Source code on GitHub",
         ["about.donate"] = "Buy me a coffee",
+        ["about.whatsnew"] = "What's new",
+
+        ["notify.updated.title"] = "Pastebird is updated to version {0}",
+        ["notify.updated.text"] = "Click here to see what's new.",
+        ["whatsnew.title"] = "What's new in Pastebird",
+        ["whatsnew.updated"] = "Updated to version {0}",
+        ["whatsnew.english"] = "",
+        ["whatsnew.empty"] = "No changes to show.",
+        ["whatsnew.all"] = "All changes",
+        ["whatsnew.close"] = "Close",
+        ["whatsnew.culture"] = "en-US",
+        ["whatsnew.type.added"] = "New",
+        ["whatsnew.type.changed"] = "Changed",
+        ["whatsnew.type.fixed"] = "Fixed",
+        ["whatsnew.type.removed"] = "Removed",
+        ["whatsnew.type.security"] = "Security",
     };
 
     private static readonly Dictionary<string, string> Dutch = new()
@@ -167,5 +183,21 @@ public sealed class Loc : INotifyPropertyChanged
         ["about.local"] = "Alle gegevens blijven op deze pc. Geen account, geen cloud, geen tracking.",
         ["about.github"] = "Broncode op GitHub",
         ["about.donate"] = "Trakteer me op een koffie",
+        ["about.whatsnew"] = "Wat is er nieuw",
+
+        ["notify.updated.title"] = "Pastebird is bijgewerkt naar versie {0}",
+        ["notify.updated.text"] = "Klik hier om te zien wat er nieuw is.",
+        ["whatsnew.title"] = "Wat is er nieuw in Pastebird",
+        ["whatsnew.updated"] = "Bijgewerkt naar versie {0}",
+        ["whatsnew.english"] = "De wijzigingen zijn in het Engels beschreven.",
+        ["whatsnew.empty"] = "Geen wijzigingen om te tonen.",
+        ["whatsnew.all"] = "Alle wijzigingen",
+        ["whatsnew.close"] = "Sluiten",
+        ["whatsnew.culture"] = "nl-NL",
+        ["whatsnew.type.added"] = "Nieuw",
+        ["whatsnew.type.changed"] = "Gewijzigd",
+        ["whatsnew.type.fixed"] = "Opgelost",
+        ["whatsnew.type.removed"] = "Verwijderd",
+        ["whatsnew.type.security"] = "Beveiliging",
     };
 }

@@ -10,6 +10,9 @@ public sealed class AppSettings
     public bool StartWithWindows { get; set; } = true;
     public bool PasteAutomatically { get; set; } = true;
     public bool CheckForUpdates { get; set; } = true;
+
+    /// <summary>Version that ran last time; a lower value means Pastebird was just updated.</summary>
+    public string? LastRunVersion { get; set; }
     public int MaxItems { get; set; } = 200;
     public AppLanguage Language { get; set; } = AppLanguage.System;
     public int HotkeyModifiers { get; set; } = Hotkey.Default.Modifiers;

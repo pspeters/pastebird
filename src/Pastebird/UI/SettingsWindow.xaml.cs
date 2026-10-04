@@ -62,6 +62,7 @@ public partial class SettingsWindow : Window
                 _app.SetLanguage((AppLanguage)LanguageBox.SelectedIndex);
         };
         ClearButton.Click += (_, _) => _app.ClearHistory(confirmOwner: this);
+        WhatsNewButton.Click += (_, _) => _app.ShowWhatsNew();
         GitHubButton.Click += (_, _) => OpenUrl(AppInfo.GitHubUrl);
         DonateButton.Click += (_, _) => OpenUrl(AppInfo.DonateUrl);
 
