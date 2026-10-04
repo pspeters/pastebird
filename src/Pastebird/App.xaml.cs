@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -30,6 +31,8 @@ public partial class App : Application
     private TrayIconService? _tray;
     private PopupWindow? _popup;
     private SettingsWindow? _settingsWindow;
+    private UpdateService? _updates;
+    private Action? _notificationAction;
     private DispatcherTimer _saveTimer = null!;
     private IntPtr _pasteTarget;
     private bool _hotkeySuspended;
@@ -103,17 +106,26 @@ public partial class App : Application
         _tray.ClearRequested += () => ClearHistory(confirmOwner: null);
         _tray.SettingsRequested += ShowSettings;
         _tray.ExitRequested += ExitApp;
+        _tray.NotificationClicked += () => _notificationAction?.Invoke();
+
+        if (UpdateService.IsSupported)
+        {
+            _updates = new UpdateService();
+            _updates.UpdateFound += OnUpdateFound;
+            _tray.UpdateRequested += () => _ = InstallUpdateAsync();
+            _updates.Enabled = Settings.CheckForUpdates;
+        }
 
         _ = SyncAutoStartAsync(firstRun);
 
         if (firstRun)
         {
             _storage.SaveSettings(Settings);
-            _tray.ShowNotification(Loc.T("notify.running.title"), Loc.T("notify.running.text", Settings.Hotkey));
+            ShowNotification(Loc.T("notify.running.title"), Loc.T("notify.running.text", Settings.Hotkey));
         }
         if (!hotkeyRegistered)
         {
-            _tray.ShowNotification(Loc.T("notify.hotkey.title"), Loc.T("notify.hotkey.text", Settings.Hotkey));
+            ShowNotification(Loc.T("notify.hotkey.title"), Loc.T("notify.hotkey.text", Settings.Hotkey));
         }
 
         _showSignal = new EventWaitHandle(false, EventResetMode.AutoReset, $@"Local\{InstanceId}-Show");
@@ -270,6 +282,59 @@ public partial class App : Application
             _history.Clear();
     }
 
+    // ---------------------------------------------------------------- updates
+
+    public bool UpdatesSupported => _updates is not null;
+
+    public UpdateInfo? AvailableUpdate => _updates?.Available;
+
+    /// <summary>Raised when a newer version is found, so an open Settings window can show it.</summary>
+    public event Action? UpdateStateChanged;
+
+    public void SetCheckForUpdates(bool enabled)
+    {
+        Settings.CheckForUpdates = enabled;
+        _storage.SaveSettings(Settings);
+        if (_updates is not null) _updates.Enabled = enabled;
+    }
+
+    /// <summary>Checks right away (from Settings). Returns false when GitHub couldn't be reached.</summary>
+    public Task<bool> CheckForUpdatesAsync() => _updates?.CheckAsync() ?? Task.FromResult(false);
+
+    private void OnUpdateFound(UpdateInfo update)
+    {
+        _tray!.UpdateVersion = update.Version.ToString(3);
+        ShowNotification(Loc.T("notify.update.title"), Loc.T("notify.update.text", update.Version.ToString(3)), () => _ = InstallUpdateAsync());
+        UpdateStateChanged?.Invoke();
+    }
+
+    /// <summary>Downloads and runs the new installer, then exits so it can replace Pastebird; the installer restarts it.</summary>
+    public async Task InstallUpdateAsync()
+    {
+        if (_updates?.Available is not { } update) return;
+
+        ShowNotification(Loc.T("notify.updating.title"), Loc.T("notify.updating.text"));
+        if (await _updates.DownloadAndStartInstallerAsync(update))
+        {
+            ExitApp();
+            return;
+        }
+        ShowNotification(Loc.T("notify.updatefailed.title"), Loc.T("notify.updatefailed.text"), () => OpenUrl(AppInfo.ReleasesUrl));
+    }
+
+    /// <summary>Shows a tray notification; <paramref name="onClick"/> runs when the user clicks it.</summary>
+    private void ShowNotification(string title, string text, Action? onClick = null)
+    {
+        _notificationAction = onClick;
+        _tray!.ShowNotification(title, text);
+    }
+
+    public static void OpenUrl(string url)
+    {
+        try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+        catch (Exception ex) { LocalStorage.Log(ex); }
+    }
+
     // ---------------------------------------------------------------- lifetime
 
     private void OnSystemMessage(int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -303,6 +368,7 @@ public partial class App : Application
         _showSignalWait?.Unregister(null);
         _showSignal?.Dispose();
         _hotkey?.Dispose();
+        _updates?.Dispose();
         _monitor?.Dispose();
         _tray?.Dispose();
         _messages?.Dispose();

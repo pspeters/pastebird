@@ -9,6 +9,7 @@ public sealed class AppSettings
 
     public bool StartWithWindows { get; set; } = true;
     public bool PasteAutomatically { get; set; } = true;
+    public bool CheckForUpdates { get; set; } = true;
     public int MaxItems { get; set; } = 200;
     public AppLanguage Language { get; set; } = AppLanguage.System;
     public int HotkeyModifiers { get; set; } = Hotkey.Default.Modifiers;

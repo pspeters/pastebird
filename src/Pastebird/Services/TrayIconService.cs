@@ -13,7 +13,7 @@ namespace Pastebird.Services;
 internal sealed class TrayIconService : IDisposable
 {
     private const int CallbackMessage = WM_APP + 1;
-    private const int CmdOpen = 1, CmdClear = 2, CmdSettings = 3, CmdExit = 4;
+    private const int CmdOpen = 1, CmdClear = 2, CmdSettings = 3, CmdExit = 4, CmdUpdate = 5;
 
     private readonly MessageWindow _window;
     private readonly int _taskbarCreatedMessage = RegisterWindowMessage("TaskbarCreated");
@@ -31,6 +31,11 @@ internal sealed class TrayIconService : IDisposable
     public event Action? ClearRequested;
     public event Action? SettingsRequested;
     public event Action? ExitRequested;
+    public event Action? UpdateRequested;
+    public event Action? NotificationClicked;
+
+    /// <summary>Version shown in the "update" menu item, or null to hide it.</summary>
+    public string? UpdateVersion { get; set; }
 
     public void ShowNotification(string title, string text)
     {
@@ -80,6 +85,9 @@ internal sealed class TrayIconService : IDisposable
             case NIN_KEYSELECT:
                 OpenRequested?.Invoke();
                 break;
+            case NIN_BALLOONUSERCLICK:
+                NotificationClicked?.Invoke();
+                break;
             case WM_CONTEXTMENU:
                 long anchor = wParam.ToInt64();
                 ShowMenu((short)(anchor & 0xFFFF), (short)((anchor >> 16) & 0xFFFF));
@@ -95,6 +103,8 @@ internal sealed class TrayIconService : IDisposable
             AppendMenu(menu, MF_STRING, CmdOpen, Loc.T("tray.open"));
             AppendMenu(menu, MF_STRING, CmdClear, Loc.T("tray.clear"));
             AppendMenu(menu, MF_STRING, CmdSettings, Loc.T("tray.settings"));
+            if (UpdateVersion is not null)
+                AppendMenu(menu, MF_STRING, CmdUpdate, Loc.T("tray.update", UpdateVersion));
             AppendMenu(menu, MF_SEPARATOR, 0, null);
             AppendMenu(menu, MF_STRING, CmdExit, Loc.T("tray.exit"));
             SetMenuDefaultItem(menu, CmdOpen, 0);
@@ -110,6 +120,7 @@ internal sealed class TrayIconService : IDisposable
                 case CmdClear: ClearRequested?.Invoke(); break;
                 case CmdSettings: SettingsRequested?.Invoke(); break;
                 case CmdExit: ExitRequested?.Invoke(); break;
+                case CmdUpdate: UpdateRequested?.Invoke(); break;
             }
         }
         finally

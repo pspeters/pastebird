@@ -50,6 +50,8 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: 
 
 [Run]
 Filename: "{app}\Pastebird.exe"; Description: "Pastebird nu starten"; Flags: nowait postinstall skipifsilent
+; Silent install = update started from within Pastebird: start the new version again.
+Filename: "{app}\Pastebird.exe"; Flags: nowait; Check: WizardSilent
 
 [UninstallDelete]
 ; Clipboard history and settings

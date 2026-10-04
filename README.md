@@ -11,7 +11,7 @@ Pastebird runs quietly in the system tray and remembers what you copy: text, URL
 - No main window, no toolbar, no clutter.
 - Keyboard-first: everything works without a mouse.
 - Native Windows 11 look with acrylic, rounded corners and light/dark mode.
-- 100% local: no account, no cloud, no telemetry, no network access.
+- 100% local: no account, no cloud, no telemetry. The only network request is a daily update check with GitHub.
 - Available in English and Dutch.
 
 ## Download
@@ -45,10 +45,17 @@ Pastebird works out of the box, so you shouldn't need Settings. They cover:
 
 - **Start with Windows** (on by default)
 - **Paste automatically** (on by default)
+- **Check for updates automatically** (on by default)
 - **Shortcut** (default `Ctrl + Shift + V`)
 - **History size**: 50, 100, 200 or 500 items (default 200)
 - **Language**: system default, English or Dutch
 - **Clear history**
+
+## Updates
+
+Pastebird checks GitHub once a day for a new version. When there is one, a notification appears: click it, or choose **Update to version …** in the tray menu or **Update now** in Settings. Pastebird downloads the new installer, checks it against the checksum GitHub publishes, installs it and restarts by itself. Your history and settings stay.
+
+You can turn the check off in Settings. The Microsoft Store version is updated by the Store.
 
 ## Good to know
 
@@ -57,7 +64,8 @@ Pastebird works out of the box, so you shouldn't need Settings. They cover:
 
 ## Privacy
 
-- Everything stays in `%LOCALAPPDATA%\Pastebird` on your pc: no network, accounts, telemetry or cloud.
+- Everything stays in `%LOCALAPPDATA%\Pastebird` on your pc: no accounts, telemetry or cloud.
+- The only network request is the daily update check: Pastebird asks GitHub for the latest release and, when you choose to update, downloads the installer. Nothing about you or your clipboard is sent. GitHub sees your IP address, as with any website. You can turn the check off in Settings.
 - Your history is encrypted for your Windows user account. Other accounts and other pcs can't read it.
 - Content that password managers mark as private is never stored.
 - Very large items (over 200,000 characters) are skipped, and the history size is capped.
