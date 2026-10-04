@@ -16,7 +16,7 @@ Pastebird runs quietly in the system tray and remembers what you copy: text, URL
 
 ## Download
 
-Get the latest installer (`PastebirdSetup-<version>.exe`) from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page and run it.
+Get the latest installer (`PastebirdSetup-<version>.exe`) from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page and run it. See the [changelog](CHANGELOG.md) for what's new.
 
 - Requires Windows 11. No admin rights and no extra software needed.
 - Pastebird starts right after installation and lives in the system tray (bottom right, next to the clock).
