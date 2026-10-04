@@ -1,5 +1,5 @@
 # Builds the installer on Windows and publishes it as a GitHub release when a version tag (v1.2.3) is pushed.
-# The tag must match <Version> in Pastebird.csproj.
+# The tag must match <Version> in Pastebird.csproj, and CHANGELOG.md needs a section for that version.
 name: Release
 
 on:
@@ -29,6 +29,17 @@ jobs:
           if ("v$version" -ne $env:GITHUB_REF_NAME) { throw "Tag $env:GITHUB_REF_NAME does not match <Version>$version</Version> in Pastebird.csproj" }
           "VERSION=$version" >> $env:GITHUB_ENV
 
+      - name: Release notes from CHANGELOG.md
+        shell: pwsh
+        run: |
+          # The section "## [<version>] - <date>" up to the next "## [" heading.
+          $text = Get-Content CHANGELOG.md -Raw
+          $pattern = '(?ms)^## \[' + [regex]::Escape($env:VERSION) + '\][^\n]*\n(.*?)(?=^## \[|\z)'
+          $match = [regex]::Match($text, $pattern)
+          if (-not $match.Success -or -not $match.Groups[1].Value.Trim()) { throw "CHANGELOG.md has no section for $env:VERSION. Add '## [$env:VERSION] - <date>' with the changes." }
+          $notes = $match.Groups[1].Value.Trim() + "`n`n---`n`n" + (Get-Content .github\release-notes.md -Raw)
+          Set-Content -Path release-notes.generated.md -Value $notes -Encoding utf8NoBOM
+
       - name: Build installer
         shell: pwsh
         run: installer\build-installer.ps1 -Unsigned
@@ -37,4 +48,4 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create $env:GITHUB_REF_NAME "publish\PastebirdSetup-$env:VERSION.exe" --title "Pastebird $env:VERSION" --notes-file .github\release-notes.md
+        run: gh release create $env:GITHUB_REF_NAME "publish\PastebirdSetup-$env:VERSION.exe" --title "Pastebird $env:VERSION" --notes-file release-notes.generated.md
