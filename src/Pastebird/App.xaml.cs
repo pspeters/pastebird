@@ -272,7 +272,7 @@ public partial class App : Application
 
     public void ClearHistory(Window? confirmOwner)
     {
-        if (_history.Items.Count == 0) return;
+        if (!_history.HasUnpinnedItems) return;
 
         var question = Loc.T("clear.confirm");
         var answer = confirmOwner is null

@@ -1,8 +1,9 @@
 namespace Pastebird.Core;
 
 /// <summary>
-/// The in-memory history, newest first. Copying something that already exists moves it to the top
-/// instead of creating a duplicate, and the list never grows beyond <see cref="MaxItems"/>.
+/// The in-memory history: pinned items first, then the rest newest first. Copying something that already
+/// exists moves it to the top instead of creating a duplicate. Only unpinned items count towards
+/// <see cref="MaxItems"/> and are removed by <see cref="Clear"/>.
 /// </summary>
 public sealed class ClipboardHistory
 {
@@ -11,7 +12,8 @@ public sealed class ClipboardHistory
 
     public ClipboardHistory(IEnumerable<ClipItem> items, int maxItems)
     {
-        _items = items.Where(i => !string.IsNullOrEmpty(i.Content)).ToList();
+        var valid = items.Where(i => !string.IsNullOrEmpty(i.Content)).ToList();
+        _items = [.. valid.Where(i => i.IsPinned), .. valid.Where(i => !i.IsPinned)];
         _maxItems = maxItems;
         Trim();
     }
@@ -19,6 +21,19 @@ public sealed class ClipboardHistory
     public event Action? Changed;
 
     public IReadOnlyList<ClipItem> Items => _items;
+
+    /// <summary>True when <see cref="Clear"/> would remove something.</summary>
+    public bool HasUnpinnedItems => _items.Count > PinnedCount;
+
+    private int PinnedCount
+    {
+        get
+        {
+            int count = 0;
+            while (count < _items.Count && _items[count].IsPinned) count++;
+            return count;
+        }
+    }
 
     public int MaxItems
     {
@@ -33,7 +48,15 @@ public sealed class ClipboardHistory
     public void Add(string content, ClipKind kind)
     {
         int index = _items.FindIndex(i => i.Content == content);
-        if (index == 0 && _items[0].Kind == kind)
+        if (index >= 0 && _items[index].IsPinned)
+        {
+            // Pinned items keep their place; just remember it was copied again.
+            _items[index].Kind = kind;
+            _items[index].CopiedAt = DateTime.UtcNow;
+            Changed?.Invoke();
+            return;
+        }
+        if (index >= 0 && index == PinnedCount && _items[index].Kind == kind)
             return; // same as the most recent item: nothing to do
 
         ClipItem item;
@@ -49,17 +72,27 @@ public sealed class ClipboardHistory
         }
 
         item.CopiedAt = DateTime.UtcNow;
-        _items.Insert(0, item);
+        _items.Insert(PinnedCount, item);
         Trim();
         Changed?.Invoke();
     }
 
-    /// <summary>Marks an item as used and moves it to the top.</summary>
+    /// <summary>Marks an item as used and moves it to the top (of the unpinned items; pinned items stay put).</summary>
     public void Promote(ClipItem item)
     {
         item.LastUsedAt = DateTime.UtcNow;
-        if (_items.Remove(item))
-            _items.Insert(0, item);
+        if (!item.IsPinned && _items.Remove(item))
+            _items.Insert(PinnedCount, item);
+        Changed?.Invoke();
+    }
+
+    /// <summary>Pins an item (to the top of the list) or unpins it (to the top of the unpinned items).</summary>
+    public void TogglePin(ClipItem item)
+    {
+        if (!_items.Remove(item)) return;
+        item.IsPinned = !item.IsPinned;
+        _items.Insert(item.IsPinned ? 0 : PinnedCount, item);
+        Trim();
         Changed?.Invoke();
     }
 
@@ -69,17 +102,19 @@ public sealed class ClipboardHistory
             Changed?.Invoke();
     }
 
+    /// <summary>Removes all unpinned items.</summary>
     public void Clear()
     {
-        if (_items.Count == 0) return;
-        _items.Clear();
+        if (!HasUnpinnedItems) return;
+        _items.RemoveRange(PinnedCount, _items.Count - PinnedCount);
         Changed?.Invoke();
     }
 
     private bool Trim()
     {
-        if (_items.Count <= _maxItems) return false;
-        _items.RemoveRange(_maxItems, _items.Count - _maxItems);
+        int limit = PinnedCount + _maxItems;
+        if (_items.Count <= limit) return false;
+        _items.RemoveRange(limit, _items.Count - limit);
         return true;
     }
 }
