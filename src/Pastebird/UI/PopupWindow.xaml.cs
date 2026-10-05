@@ -282,8 +282,10 @@ public partial class PopupWindow : Window
         SetWindowLongPtr(_hwnd, GWL_EXSTYLE, exStyle | WS_EX_TOOLWINDOW);
 
         // Let DWM render behind the (transparent) WPF content.
-        if (HwndSource.FromHwnd(_hwnd)?.CompositionTarget is { } target)
+        var source = HwndSource.FromHwnd(_hwnd);
+        if (source?.CompositionTarget is { } target)
             target.BackgroundColor = Colors.Transparent;
+        source?.AddHook(WndProc);
 
         SetDwmAttribute(_hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_ROUND);
         if (HasSystemBackdrop)
@@ -354,17 +356,42 @@ public partial class PopupWindow : Window
         if (_hwnd == IntPtr.Zero || _workArea.Width == 0) return;
 
         GetWindowRect(_hwnd, out var rect);
+        var (x, y) = Place(rect.Width, rect.Height);
+        if (x != rect.Left || y != rect.Top)
+            SetWindowPos(_hwnd, IntPtr.Zero, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    /// <summary>Top-left corner for a window of this size (in pixels at the window's current DPI).</summary>
+    private (int X, int Y) Place(int windowWidth, int windowHeight)
+    {
         double windowScale = GetDpiForWindow(_hwnd) / 96.0;
         double rescale = windowScale > 0 ? _monitorScale / windowScale : 1;
-        int width = (int)(rect.Width * rescale);
-        int height = (int)(rect.Height * rescale);
+        int width = (int)(windowWidth * rescale);
+        int height = (int)(windowHeight * rescale);
 
         int margin = (int)(8 * _monitorScale);
         int x = Math.Clamp(_anchorX - width / 2, _workArea.Left + margin, Math.Max(_workArea.Left + margin, _workArea.Right - width - margin));
         int y = _anchorBottom ? _anchorY - height : _anchorY;
         y = Math.Clamp(y, _workArea.Top + margin, Math.Max(_workArea.Top + margin, _workArea.Bottom - height - margin));
+        return (x, y);
+    }
 
-        if (x != rect.Left || y != rect.Top)
-            SetWindowPos(_hwnd, IntPtr.Zero, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    /// <summary>
+    /// Moves the popup in the same step as a resize (SizeToContent). Otherwise a popup anchored at its bottom,
+    /// above the tray icon, first grows downwards and then jumps up in Reposition.
+    /// </summary>
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WM_WINDOWPOSCHANGING && _workArea.Width != 0)
+        {
+            var pos = Marshal.PtrToStructure<WINDOWPOS>(lParam);
+            if ((pos.flags & SWP_NOSIZE) == 0)
+            {
+                (pos.x, pos.y) = Place(pos.cx, pos.cy);
+                pos.flags &= ~SWP_NOMOVE;
+                Marshal.StructureToPtr(pos, lParam, false);
+            }
+        }
+        return IntPtr.Zero;
     }
 }

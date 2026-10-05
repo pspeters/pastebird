@@ -8,6 +8,7 @@ internal static class NativeMethods
 {
     public const int WM_NULL = 0x0000;
     public const int WM_SETTINGCHANGE = 0x001A;
+    public const int WM_WINDOWPOSCHANGING = 0x0046;
     public const int WM_CONTEXTMENU = 0x007B;
     public const int WM_HOTKEY = 0x0312;
     public const int WM_CLIPBOARDUPDATE = 0x031D;
@@ -18,7 +19,7 @@ internal static class NativeMethods
     public const int GWL_EXSTYLE = -20;
     public const int WS_EX_TOOLWINDOW = 0x80;
 
-    public const uint SWP_NOSIZE = 0x1, SWP_NOZORDER = 0x4, SWP_NOACTIVATE = 0x10;
+    public const uint SWP_NOSIZE = 0x1, SWP_NOMOVE = 0x2, SWP_NOZORDER = 0x4, SWP_NOACTIVATE = 0x10;
     public const uint MONITOR_DEFAULTTONEAREST = 2;
 
     public const int ASFW_ANY = -1;
@@ -113,6 +114,14 @@ internal static class NativeMethods
         public int Left, Top, Right, Bottom;
         public readonly int Width => Right - Left;
         public readonly int Height => Bottom - Top;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WINDOWPOS
+    {
+        public IntPtr hwnd, hwndInsertAfter;
+        public int x, y, cx, cy;
+        public uint flags;
     }
 
     [StructLayout(LayoutKind.Sequential)]
