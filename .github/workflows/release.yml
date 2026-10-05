@@ -49,3 +49,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create $env:GITHUB_REF_NAME "publish\PastebirdSetup-$env:VERSION.exe" --title "Pastebird $env:VERSION" --notes-file release-notes.generated.md
+
+  # Opens a pull request on microsoft/winget-pkgs for the new version (see packaging/winget/README.md).
+  # Skipped until the WINGET_TOKEN secret exists. A release made with github.token doesn't trigger
+  # other workflows, so this runs here instead of on the "release" event.
+  winget:
+    needs: release
+    runs-on: ubuntu-latest
+    env:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+    steps:
+      - if: env.WINGET_TOKEN != ''
+        uses: vedantmgoyal9/winget-releaser@a8fff44b123f115ce4c21543edf8b677376fc7e0 # main, 2026-09-20
+        with:
+          identifier: PSpeters.Pastebird
+          installers-regex: 'PastebirdSetup-.*\.exe$'
+          release-tag: ${{ github.ref_name }}
+          token: ${{ secrets.WINGET_TOKEN }}
