@@ -34,6 +34,10 @@ public partial class PopupWindow : Window
     private bool _hiding;
     private bool _allowClose;
     private DateTime _hiddenAt;
+    private bool _showPreview;
+
+    // Characters shown in the preview pane; the rest is summarized.
+    private const int PreviewLimit = 5_000;
 
     // Placement, in physical pixels of the target monitor.
     private RECT _workArea;
@@ -54,6 +58,7 @@ public partial class PopupWindow : Window
         PreviewKeyDown += OnPreviewKeyDown;
         SearchBox.TextChanged += (_, _) => Refresh();
         ResultList.PreviewMouseLeftButtonUp += OnResultClicked;
+        ResultList.SelectionChanged += (_, _) => UpdatePreview();
     }
 
     /// <summary>Raised when the user picks an item. The bool is true when the item should also be pasted.</summary>
@@ -68,7 +73,9 @@ public partial class PopupWindow : Window
     public void ShowPopup(PopupPlacement placement, IntPtr referenceWindow)
     {
         ApplyTheme();
+        _showPreview = false;
         if (SearchBox.Text.Length > 0) SearchBox.Clear(); else Refresh();
+        UpdatePreview();
 
         ComputeAnchor(placement, referenceWindow);
         Reposition();
@@ -132,6 +139,19 @@ public partial class PopupWindow : Window
         ResultList.ScrollIntoView(_results[index]);
     }
 
+    /// <summary>Shows the full content of the selected item below the list while the preview is on.</summary>
+    private void UpdatePreview()
+    {
+        var item = _showPreview ? ResultList.SelectedItem as ClipItem : null;
+        PreviewPane.Visibility = item is null ? Visibility.Collapsed : Visibility.Visible;
+        if (item is null) return;
+
+        PreviewText.Text = item.Content.Length > PreviewLimit
+            ? item.Content[..PreviewLimit] + Loc.T("popup.preview.more", item.Content.Length - PreviewLimit)
+            : item.Content;
+        PreviewScroll.ScrollToTop();
+    }
+
     private void TogglePin(ClipItem item)
     {
         _history.TogglePin(item); // refreshes the list through OnHistoryChanged
@@ -181,8 +201,18 @@ public partial class PopupWindow : Window
                 if (ResultList.SelectedItem is ClipItem toPin)
                     TogglePin(toPin);
                 break;
+            case >= Key.D1 and <= Key.D9 or >= Key.NumPad1 and <= Key.NumPad9
+                when (modifiers & ~ModifierKeys.Shift) == ModifierKeys.Control:
+                // Ctrl+1…9 picks the item at that position, like Enter (with Shift: copy only).
+                int index = e.Key >= Key.NumPad1 ? e.Key - Key.NumPad1 : e.Key - Key.D1;
+                if (index < _results.Count)
+                    Choose(_results[index], paste: !modifiers.HasFlag(ModifierKeys.Shift));
+                break;
             case Key.Tab:
-                break; // keep focus in the search box
+                // Toggles the full content of the selected item; focus stays in the search box.
+                _showPreview = !_showPreview;
+                UpdatePreview();
+                break;
             default:
                 return;
         }

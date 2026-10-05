@@ -120,6 +120,16 @@
             <TextBlock x:Name="EmptyText" DockPanel.Dock="Top" Margin="18,16,18,18"
                        Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Visibility="Collapsed" />
 
+            <!-- Full content of the selected item, toggled with Tab. -->
+            <Border x:Name="PreviewPane" DockPanel.Dock="Bottom" BorderThickness="0,1,0,0"
+                    BorderBrush="{DynamicResource Divider}" Visibility="Collapsed">
+                <ScrollViewer x:Name="PreviewScroll" MaxHeight="220" Margin="6" Padding="12,4,8,4" Focusable="False"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <TextBlock x:Name="PreviewText" TextWrapping="Wrap" FontFamily="Cascadia Mono, Consolas" FontSize="12.5"
+                               Foreground="{DynamicResource TextSecondary}" />
+                </ScrollViewer>
+            </Border>
+
             <ListBox x:Name="ResultList" Margin="6,5,6,6" MaxHeight="370"
                      Background="Transparent" BorderThickness="0" Padding="0" Focusable="False"
                      ItemContainerStyle="{StaticResource ClipItemStyle}"
