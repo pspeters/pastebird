@@ -39,6 +39,7 @@ public sealed class Loc : INotifyPropertyChanged
         ["popup.empty"] = "Nothing copied yet. Everything you copy with Ctrl+C shows up here.",
         ["popup.noResults"] = "No results",
         ["popup.pin.tooltip"] = "Pin or unpin (Ctrl+P)",
+        ["popup.preview.more"] = "\n… and {0:N0} more characters",
         ["item.files"] = "{0} files: ",
         ["key.space"] = "Space",
 
@@ -123,6 +124,7 @@ public sealed class Loc : INotifyPropertyChanged
         ["popup.empty"] = "Nog niets gekopieerd. Alles wat je kopieert met Ctrl+C verschijnt hier.",
         ["popup.noResults"] = "Geen resultaten",
         ["popup.pin.tooltip"] = "Vastpinnen of losmaken (Ctrl+P)",
+        ["popup.preview.more"] = "\n… en nog {0:N0} tekens",
         ["item.files"] = "{0} bestanden: ",
         ["key.space"] = "Spatie",
 

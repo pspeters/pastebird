@@ -36,8 +36,8 @@ internal static class PasteService
 
         SetForegroundWindow(target);
 
-        // Wait until the target is active and the user has released Ctrl/Shift/Alt/Win.
-        for (int i = 0; i < 30 && (GetForegroundWindow() != target || ModifiersDown()); i++)
+        // Wait until the target is active and the user has released Ctrl/Shift/Alt/Win (Ctrl+1…9 in the popup keeps Ctrl down).
+        for (int i = 0; i < 75 && (GetForegroundWindow() != target || ModifiersDown()); i++)
             await Task.Delay(20);
         if (GetForegroundWindow() != target || ModifiersDown())
             return;

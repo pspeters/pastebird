@@ -31,6 +31,8 @@ Get the latest installer (`PastebirdSetup-<version>.exe`) from the [Releases](ht
 | `↑` / `↓`, `PgUp` / `PgDn` | Navigate |
 | `Enter` | Put the item on the clipboard and paste it into the previous window |
 | `Shift + Enter` | Copy only, don't paste |
+| `Ctrl + 1` … `Ctrl + 9` | Paste the 1st to 9th item right away (with `Shift`: copy only) |
+| `Tab` | Show or hide the full content of the selected item |
 | `Ctrl + P` | Pin or unpin the selected item |
 | `Delete` | Remove the selected item (when the cursor is at the end of the search box) |
 | `Ctrl + Delete` | Clear the history (pinned items stay) |
