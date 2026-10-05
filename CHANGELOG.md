@@ -17,7 +17,7 @@ The website (pastebird.app/changelog.php) shows this file from the main branch, 
 ## [1.4.0] - 2026-10-05
 
 ### Added
-- Press **Tab** in the popup to see the full content of the selected item, handy for long or multi-line text. Press Tab again to hide it.
+- Press **Tab** in the popup to see the full content of the selected item and when you copied it, handy for long or multi-line text. Press Tab again to hide it.
 - Press **Ctrl+1** to **Ctrl+9** to paste the first to ninth item right away. Add Shift to copy it without pasting.
 
 ## [1.3.0] - 2026-10-04
