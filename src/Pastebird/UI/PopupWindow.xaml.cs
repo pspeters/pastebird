@@ -146,10 +146,32 @@ public partial class PopupWindow : Window
         PreviewPane.Visibility = item is null ? Visibility.Collapsed : Visibility.Visible;
         if (item is null) return;
 
+        CopiedText.Text = item.CopiedAt == default ? "" : FormatCopiedAt(item.CopiedAt);
+        CopiedText.Visibility = CopiedText.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         PreviewText.Text = item.Content.Length > PreviewLimit
             ? item.Content[..PreviewLimit] + Loc.T("popup.preview.more", item.Content.Length - PreviewLimit)
             : item.Content;
         PreviewScroll.ScrollToTop();
+    }
+
+    /// <summary>"Copied 5 min ago", "Copied yesterday at 14:32", "Copied on 3 October at 09:15"…</summary>
+    private static string FormatCopiedAt(DateTime copiedAtUtc)
+    {
+        var copied = copiedAtUtc.ToLocalTime();
+        var now = DateTime.Now;
+        var culture = Loc.Culture;
+        var time = copied.ToString("t", culture);
+
+        int minutes = (int)(now - copied).TotalMinutes;
+        if (minutes < 1) return Loc.T("popup.copied.now");
+        if (minutes < 60) return Loc.T("popup.copied.minutes", minutes);
+        if (copied.Date == now.Date) return Loc.T("popup.copied.today", time);
+        if (copied.Date == now.Date.AddDays(-1)) return Loc.T("popup.copied.yesterday", time);
+
+        var date = copied.Year == now.Year
+            ? copied.ToString(culture.DateTimeFormat.MonthDayPattern, culture)
+            : copied.ToString("d", culture);
+        return Loc.T("popup.copied.date", date, time);
     }
 
     private void TogglePin(ClipItem item)

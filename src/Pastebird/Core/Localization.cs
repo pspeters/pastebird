@@ -25,11 +25,17 @@ public sealed class Loc : INotifyPropertyChanged
 
     public static string T(string key, params object[] args) => string.Format(Instance[key], args);
 
+    /// <summary>Culture for dates in the UI: the system's when it matches the UI language, otherwise a default for that language.</summary>
+    public static CultureInfo Culture { get; private set; } = CultureInfo.CurrentCulture;
+
     public static void Apply(AppLanguage language)
     {
         bool dutch = language == AppLanguage.Dutch
             || (language == AppLanguage.System && CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "nl");
         Instance._strings = dutch ? Dutch : English;
+        Culture = CultureInfo.CurrentCulture.TwoLetterISOLanguageName == (dutch ? "nl" : "en")
+            ? CultureInfo.CurrentCulture
+            : CultureInfo.GetCultureInfo(dutch ? "nl-NL" : "en-US");
         Instance.PropertyChanged?.Invoke(Instance, new PropertyChangedEventArgs("Item[]"));
     }
 
@@ -40,6 +46,11 @@ public sealed class Loc : INotifyPropertyChanged
         ["popup.noResults"] = "No results",
         ["popup.pin.tooltip"] = "Pin or unpin (Ctrl+P)",
         ["popup.preview.more"] = "\n… and {0:N0} more characters",
+        ["popup.copied.now"] = "Copied just now",
+        ["popup.copied.minutes"] = "Copied {0} min ago",
+        ["popup.copied.today"] = "Copied today at {0}",
+        ["popup.copied.yesterday"] = "Copied yesterday at {0}",
+        ["popup.copied.date"] = "Copied on {0} at {1}",
         ["item.files"] = "{0} files: ",
         ["key.space"] = "Space",
 
@@ -125,6 +136,11 @@ public sealed class Loc : INotifyPropertyChanged
         ["popup.noResults"] = "Geen resultaten",
         ["popup.pin.tooltip"] = "Vastpinnen of losmaken (Ctrl+P)",
         ["popup.preview.more"] = "\n… en nog {0:N0} tekens",
+        ["popup.copied.now"] = "Zojuist gekopieerd",
+        ["popup.copied.minutes"] = "{0} min geleden gekopieerd",
+        ["popup.copied.today"] = "Vandaag om {0} gekopieerd",
+        ["popup.copied.yesterday"] = "Gisteren om {0} gekopieerd",
+        ["popup.copied.date"] = "Op {0} om {1} gekopieerd",
         ["item.files"] = "{0} bestanden: ",
         ["key.space"] = "Spatie",
 
