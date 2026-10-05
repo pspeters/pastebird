@@ -35,6 +35,7 @@ public partial class PopupWindow : Window
     private bool _allowClose;
     private DateTime _hiddenAt;
     private bool _showPreview;
+    private readonly double _listMaxHeight;
 
     // Characters shown in the preview pane; the rest is summarized.
     private const int PreviewLimit = 5_000;
@@ -48,6 +49,7 @@ public partial class PopupWindow : Window
     public PopupWindow(ClipboardHistory history)
     {
         InitializeComponent();
+        _listMaxHeight = ResultList.MaxHeight;
         _history = history;
         _history.Changed += OnHistoryChanged;
 
@@ -143,15 +145,25 @@ public partial class PopupWindow : Window
     private void UpdatePreview()
     {
         var item = _showPreview ? ResultList.SelectedItem as ClipItem : null;
-        PreviewPane.Visibility = item is null ? Visibility.Collapsed : Visibility.Visible;
-        if (item is null) return;
+        if (item is null)
+        {
+            PreviewPane.Visibility = Visibility.Collapsed;
+            ResultList.MaxHeight = _listMaxHeight;
+            return;
+        }
 
         CopiedText.Text = item.CopiedAt == default ? "" : FormatCopiedAt(item.CopiedAt);
-        CopiedText.Visibility = CopiedText.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         PreviewText.Text = item.Content.Length > PreviewLimit
             ? item.Content[..PreviewLimit] + Loc.T("popup.preview.more", item.Content.Length - PreviewLimit)
             : item.Content;
         PreviewScroll.ScrollToTop();
+
+        // The pane takes its (fixed) height from the list, so a full popup keeps its size instead of
+        // growing and jumping. Measured before the layout pass, so the window is never resized in between.
+        PreviewPane.Visibility = Visibility.Visible;
+        PreviewPane.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        ResultList.MaxHeight = _listMaxHeight - PreviewPane.DesiredSize.Height;
+        ResultList.ScrollIntoView(item);
     }
 
     /// <summary>"Copied 5 min ago", "Copied yesterday at 14:32", "Copied on 3 October at 09:15"…</summary>

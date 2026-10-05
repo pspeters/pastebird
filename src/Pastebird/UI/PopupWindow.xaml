@@ -124,9 +124,10 @@
             <Border x:Name="PreviewPane" DockPanel.Dock="Bottom" BorderThickness="0,1,0,0"
                     BorderBrush="{DynamicResource Divider}" Visibility="Collapsed">
                 <StackPanel Margin="6">
-                    <TextBlock x:Name="CopiedText" Margin="12,4,8,2" FontSize="12"
+                    <!-- Fixed heights, so the pane is equally tall for every item (see UpdatePreview). -->
+                    <TextBlock x:Name="CopiedText" Height="16" Margin="12,4,8,2" FontSize="12"
                                Foreground="{DynamicResource TextTertiary}" />
-                    <ScrollViewer x:Name="PreviewScroll" MaxHeight="220" Padding="12,4,8,4" Focusable="False"
+                    <ScrollViewer x:Name="PreviewScroll" Height="150" Padding="12,4,8,4" Focusable="False"
                                   VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <TextBlock x:Name="PreviewText" TextWrapping="Wrap" FontFamily="Cascadia Mono, Consolas" FontSize="12.5"
                                    Foreground="{DynamicResource TextSecondary}" />
