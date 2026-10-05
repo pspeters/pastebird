@@ -41,7 +41,7 @@ This creates `publish\PastebirdSetup-<version>.exe` (about 42 MB). It includes .
 2. Add a section for the new version at the top of [CHANGELOG.md](../CHANGELOG.md): `## [1.2.0] - 2026-11-01` followed by `### Added`, `### Changed`, `### Fixed` or `### Removed` with one line per change.
 3. Commit and push a tag `v<version>` (for example `v1.2.0`).
 
-The GitHub Actions workflow `.github/workflows/release.yml` builds the installer on Windows and publishes the release, with that changelog section as release notes. It stops when the tag doesn't match `<Version>` or the changelog has no section for it. The changelog page on pastebird.app reads `CHANGELOG.md` from `main` and shows the versions up to the latest release, and installed copies of Pastebird pick up the update within a day.
+The GitHub Actions workflow `.github/workflows/release.yml` builds the installer on Windows and publishes the release, with that changelog section as release notes. It stops when the tag doesn't match `<Version>` or the changelog has no section for it. With the `WINGET_TOKEN` secret it then also submits the new version to winget; see [packaging/winget](../packaging/winget/README.md). The changelog page on pastebird.app reads `CHANGELOG.md` from `main` and shows the versions up to the latest release, and installed copies of Pastebird pick up the update within a day.
 
 ### Code signing (OV certificate)
 
