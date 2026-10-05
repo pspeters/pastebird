@@ -16,7 +16,13 @@ Pastebird runs quietly in the system tray and remembers what you copy: text, URL
 
 ## Download
 
-Get the latest installer (`PastebirdSetup-<version>.exe`) from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page and run it. See the [changelog](CHANGELOG.md) for what's new.
+Pick one:
+
+- **Microsoft Store:** [get Pastebird from the Microsoft Store](https://apps.microsoft.com/detail/9NS7S1NGXWTG). The Store keeps it up to date.
+- **winget:** run `winget install PSpeters.Pastebird` in a terminal.
+- **Installer:** get the latest `PastebirdSetup-<version>.exe` from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page and run it. Windows may show "Windows protected your PC" because the installer isn't code-signed yet: click **More info → Run anyway**.
+
+Install just one of them. See the [changelog](CHANGELOG.md) for what's new.
 
 - Requires Windows 11. No admin rights and no extra software needed.
 - Pastebird starts right after installation and lives in the system tray (bottom right, next to the clock).
