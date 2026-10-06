@@ -12,6 +12,8 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    outputs:
+      published: ${{ steps.publish.outputs.published }}
     steps:
       - uses: actions/checkout@v7
 
@@ -44,17 +46,29 @@ jobs:
         shell: pwsh
         run: installer\build-installer.ps1 -Unsigned
 
+      # Pushing an existing tag again (for example after rewriting history) keeps the release that is already there.
       - name: Publish release
+        id: publish
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create $env:GITHUB_REF_NAME "publish\PastebirdSetup-$env:VERSION.exe" --title "Pastebird $env:VERSION" --notes-file release-notes.generated.md
+        run: |
+          gh release view $env:GITHUB_REF_NAME *> $null
+          if ($LASTEXITCODE -eq 0) {
+            "::notice::Release $env:GITHUB_REF_NAME already exists; left it as it is."
+            "published=false" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+          gh release create $env:GITHUB_REF_NAME "publish\PastebirdSetup-$env:VERSION.exe" --title "Pastebird $env:VERSION" --notes-file release-notes.generated.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "published=true" >> $env:GITHUB_OUTPUT
 
   # Opens a pull request on microsoft/winget-pkgs for the new version (see packaging/winget/README.md).
   # Skipped until the WINGET_TOKEN secret exists. A release made with github.token doesn't trigger
   # other workflows, so this runs here instead of on the "release" event.
   winget:
     needs: release
+    if: needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
     env:
       WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
