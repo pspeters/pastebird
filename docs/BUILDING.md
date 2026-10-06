@@ -26,7 +26,7 @@ Requires [Inno Setup 6](https://jrsoftware.org/isdl.php).
 powershell -ExecutionPolicy Bypass -File installer/build-installer.ps1
 ```
 
-This creates `publish\PastebirdSetup-<version>.exe` (about 42 MB). It includes .NET, so the target pc needs no runtime.
+This creates `publish\PastebirdSetup-<version>.exe` (about 45 MB). It includes .NET, so the target pc needs no runtime.
 
 - Installs per user in `%LOCALAPPDATA%\Programs\Pastebird`, without admin rights.
 - Adds a Start menu shortcut and starts Pastebird right after installation.

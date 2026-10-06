@@ -35,6 +35,8 @@ public partial class App : Application
     private UpdateService? _updates;
     private Action? _notificationAction;
     private DispatcherTimer _saveTimer = null!;
+    private readonly DispatcherTimer _expireTimer = new() { Interval = TimeSpan.FromHours(1) };
+    private readonly SemaphoreSlim _recognizing = new(1, 1);
     private IntPtr _pasteTarget;
     private bool _hotkeySuspended;
 
@@ -87,14 +89,20 @@ public partial class App : Application
         _saveTimer.Tick += (_, _) => SaveHistoryNow();
         _history.Changed += () => { _saveTimer.Stop(); _saveTimer.Start(); };
 
+        // Items older than the chosen number of days go: at start and then hourly.
+        RemoveExpiredItems();
+        _expireTimer.Tick += (_, _) => RemoveExpiredItems();
+        _expireTimer.Start();
+
         _messages = new MessageWindow();
         _messages.Message += OnSystemMessage;
         SystemTheme.EnableDarkMenus(_messages.Handle);
 
         _monitor = new ClipboardMonitor(_messages);
-        _monitor.Captured += _history.Add;
+        _monitor.Captured += OnCaptured;
+        _ = RecognizeMissingTextAsync();
 
-        _popup = new PopupWindow(_history);
+        _popup = new PopupWindow(_history, _storage);
         _popup.ItemChosen += OnItemChosen;
         _popup.Prepare();
 
@@ -174,11 +182,48 @@ public partial class App : Application
         _popup!.ShowPopup(placement, foreground);
     }
 
-    private void OnItemChosen(ClipItem item, bool paste)
+    private void OnCaptured(ClipItem copied, ClipData? data)
+    {
+        var item = _history.Add(copied);
+        _storage.SaveData(item, data);
+        if (item.Kind == ClipKind.Image && item.ImageText is null)
+            _ = RecognizeTextAsync(item);
+    }
+
+    /// <summary>Reads the text in an image in the background, one image at a time, so it can be found by searching.</summary>
+    private async Task RecognizeTextAsync(ClipItem item)
+    {
+        await _recognizing.WaitAsync();
+        try
+        {
+            if (item.ImageText is not null || !_history.Items.Contains(item)) return;
+            var text = await Task.Run(async () => _storage.LoadData(item)?.Png is { } png ? await TextRecognition.RecognizeAsync(png) : null);
+            if (text is not null)
+                _history.SetImageText(item, text);
+        }
+        catch (Exception ex)
+        {
+            LocalStorage.Log(ex);
+        }
+        finally
+        {
+            _recognizing.Release();
+        }
+    }
+
+    /// <summary>Recognizes the text in images that don't have it yet (copied with an older version, or before a language was installed).</summary>
+    private async Task RecognizeMissingTextAsync()
+    {
+        await Task.Delay(TimeSpan.FromSeconds(30)); // not while Windows is still starting
+        foreach (var item in _history.Items.Where(i => i.Kind == ClipKind.Image && i.ImageText is null).ToList())
+            await RecognizeTextAsync(item);
+    }
+
+    private void OnItemChosen(ClipItem item, bool paste, bool keepFormatting)
     {
         try
         {
-            _monitor!.SetClipboard(item);
+            _monitor!.SetClipboard(item, _storage.LoadData(item), keepFormatting);
         }
         catch (Exception ex) when (ex is ExternalException or InvalidOperationException)
         {
@@ -258,6 +303,19 @@ public partial class App : Application
         Settings.MaxItems = maxItems;
         _storage.SaveSettings(Settings);
         _history.MaxItems = maxItems;
+    }
+
+    public void SetKeepDays(int days)
+    {
+        Settings.KeepDays = days;
+        _storage.SaveSettings(Settings);
+        RemoveExpiredItems();
+    }
+
+    private void RemoveExpiredItems()
+    {
+        if (Settings.KeepDays > 0)
+            _history.RemoveCopiedBefore(DateTime.UtcNow.AddDays(-Settings.KeepDays));
     }
 
     /// <summary>Checks that the shortcut is free and stores it. It becomes active once editing ends.</summary>
@@ -377,7 +435,7 @@ public partial class App : Application
     private void SaveHistoryNow()
     {
         _saveTimer.Stop();
-        _storage.SaveHistory(_history.Items);
+        _storage.SaveHistory(_history.Items, _history.RecentlyRemoved);
     }
 
     private void ExitApp()

@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:core="clr-namespace:Pastebird.Core"
+        xmlns:ui="clr-namespace:Pastebird.UI"
         Title="Pastebird"
         Width="520"
         SizeToContent="Height"
@@ -34,6 +35,7 @@
         <SolidColorBrush x:Key="ScrollThumb" Color="#72000000" />
 
         <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+        <ui:ThumbnailConverter x:Key="ThumbnailConverter" />
 
         <!-- Slim Windows 11 style scrollbar -->
         <Style TargetType="ScrollBar">
@@ -95,7 +97,12 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
+                <!-- Shown after removing items while the popup is open. -->
+                <TextBlock x:Name="UndoHint" Grid.Column="2" FontSize="12" Margin="12,1,0,0" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextTertiary}" Visibility="Collapsed"
+                           Text="{Binding [popup.undo], Source={x:Static core:Loc.Instance}}" />
                 <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFont}" FontSize="14"
                            Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,1,14,0" />
                 <TextBlock x:Name="Placeholder" Grid.Column="1" FontSize="15"
@@ -132,6 +139,8 @@
                         <TextBlock x:Name="PreviewText" TextWrapping="Wrap" FontFamily="Cascadia Mono, Consolas" FontSize="12.5"
                                    Foreground="{DynamicResource TextSecondary}" />
                     </ScrollViewer>
+                    <Image x:Name="PreviewImage" Height="142" Margin="12,4,8,4" Stretch="Uniform" StretchDirection="DownOnly"
+                           HorizontalAlignment="Left" RenderOptions.BitmapScalingMode="HighQuality" Visibility="Collapsed" />
                 </StackPanel>
             </Border>
 
@@ -155,14 +164,48 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding Glyph, Mode=OneTime}" FontFamily="{StaticResource IconFont}"
                                        FontSize="14" Foreground="{DynamicResource TextSecondary}"
                                        VerticalAlignment="Center" Margin="0,1,14,0" />
-                            <TextBlock Grid.Column="1" Text="{Binding Preview, Mode=OneTime}"
-                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <DockPanel Grid.Column="1">
+                                <!-- Thumbnail for images; the thumbnail is stored at twice this size. -->
+                                <Image Source="{Binding Thumbnail, Mode=OneTime, Converter={StaticResource ThumbnailConverter}}"
+                                       MaxHeight="32" MaxWidth="128" Margin="0,0,10,0" Stretch="Uniform"
+                                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                                       RenderOptions.BitmapScalingMode="HighQuality">
+                                    <Image.Style>
+                                        <Style TargetType="Image">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Thumbnail, Mode=OneTime}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Image.Style>
+                                </Image>
+                                <TextBlock Text="{Binding Preview, Mode=OneTime}"
+                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <!-- Remove button, shown on hover. Ctrl+Z brings the item back while the popup is open. -->
+                            <TextBlock Grid.Column="2" Tag="RemoveButton" Text="&#xE74D;" FontFamily="{StaticResource IconFont}"
+                                       FontSize="13" Padding="10,2,2,2" Margin="0,-2,0,-2" Background="Transparent"
+                                       VerticalAlignment="Center" Cursor="Hand" Foreground="{DynamicResource TextTertiary}"
+                                       ToolTip="{Binding [popup.remove.tooltip], Source={x:Static core:Loc.Instance}}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <!-- Pin toggle: always shown for pinned items, on hover for the others. Clicking it pins/unpins. -->
-                            <TextBlock x:Name="PinToggle" Grid.Column="2" Tag="PinToggle" FontFamily="{StaticResource IconFont}"
+                            <TextBlock x:Name="PinToggle" Grid.Column="3" Tag="PinToggle" FontFamily="{StaticResource IconFont}"
                                        FontSize="13" Padding="10,2,2,2" Margin="0,-2,-4,-2" Background="Transparent"
                                        VerticalAlignment="Center" Cursor="Hand"
                                        ToolTip="{Binding [popup.pin.tooltip], Source={x:Static core:Loc.Instance}}">

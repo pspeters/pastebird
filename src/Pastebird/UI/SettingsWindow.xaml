@@ -98,6 +98,20 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding [settings.keep], Source={x:Static core:Loc.Instance}}" />
+                        <TextBlock Style="{StaticResource Description}" Text="{Binding [settings.keep.desc], Source={x:Static core:Loc.Instance}}" />
+                    </StackPanel>
+                    <ComboBox x:Name="KeepDaysBox" Grid.Column="1" Width="170" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
                         <TextBlock Text="{Binding [settings.language], Source={x:Static core:Loc.Instance}}" />
                         <TextBlock Style="{StaticResource Description}" Text="{Binding [settings.language.desc], Source={x:Static core:Loc.Instance}}" />
                     </StackPanel>

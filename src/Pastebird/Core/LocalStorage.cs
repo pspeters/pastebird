@@ -17,7 +17,10 @@ public sealed class LocalStorage
 
     private static readonly byte[] Entropy = "Pastebird.History.v1"u8.ToArray();
 
+    private static readonly byte[] DataEntropy = "Pastebird.Data.v1"u8.ToArray();
+
     private static string HistoryPath => Path.Combine(Folder, "history.dat");
+    private static string DataFolder => Path.Combine(Folder, "data");
     private static string SettingsPath => Path.Combine(Folder, "settings.json");
 
     public LocalStorage() => Directory.CreateDirectory(Folder);
@@ -39,16 +42,70 @@ public sealed class LocalStorage
         }
     }
 
-    public void SaveHistory(IEnumerable<ClipItem> items)
+    /// <summary>
+    /// Saves the history and removes the <see cref="ClipData"/> files of items that are no longer in it,
+    /// except those of <paramref name="removedButUndoable"/>.
+    /// </summary>
+    public void SaveHistory(IEnumerable<ClipItem> items, IEnumerable<ClipItem> removedButUndoable)
     {
         try
         {
-            var json = JsonSerializer.SerializeToUtf8Bytes(items.ToList(), PastebirdJson.Default.ListClipItem);
+            var list = items.ToList();
+            var json = JsonSerializer.SerializeToUtf8Bytes(list, PastebirdJson.Default.ListClipItem);
             WriteAtomic(HistoryPath, ProtectedData.Protect(json, Entropy, DataProtectionScope.CurrentUser));
+            RemoveUnusedData([.. list, .. removedButUndoable]);
         }
         catch (Exception ex)
         {
             Log(ex);
+        }
+    }
+
+    /// <summary>Stores the formatting or image of an item (encrypted like the history), or removes it when there is none.</summary>
+    public void SaveData(ClipItem item, ClipData? data)
+    {
+        try
+        {
+            if (data is null)
+            {
+                File.Delete(DataPath(item.Id));
+                return;
+            }
+            Directory.CreateDirectory(DataFolder);
+            WriteAtomic(DataPath(item.Id), ProtectedData.Protect(data.Serialize(), DataEntropy, DataProtectionScope.CurrentUser));
+        }
+        catch (Exception ex)
+        {
+            Log(ex);
+        }
+    }
+
+    public ClipData? LoadData(ClipItem item)
+    {
+        if (!item.HasData) return null;
+        try
+        {
+            var path = DataPath(item.Id);
+            if (!File.Exists(path)) return null;
+            return ClipData.Deserialize(ProtectedData.Unprotect(File.ReadAllBytes(path), DataEntropy, DataProtectionScope.CurrentUser));
+        }
+        catch (Exception ex)
+        {
+            Log(ex);
+            return null;
+        }
+    }
+
+    private static string DataPath(Guid id) => Path.Combine(DataFolder, id.ToString("N") + ".dat");
+
+    private static void RemoveUnusedData(List<ClipItem> items)
+    {
+        if (!Directory.Exists(DataFolder)) return;
+        var used = items.Where(i => i.HasData).Select(i => i.Id.ToString("N")).ToHashSet();
+        foreach (var file in Directory.EnumerateFiles(DataFolder))
+        {
+            if (!used.Contains(Path.GetFileNameWithoutExtension(file)))
+                File.Delete(file);
         }
     }
 

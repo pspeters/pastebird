@@ -29,6 +29,7 @@ public partial class PopupWindow : Window
     private static readonly bool HasSystemBackdrop = Environment.OSVersion.Version.Build >= 22621;
 
     private readonly ClipboardHistory _history;
+    private readonly LocalStorage _storage;
     private List<ClipItem> _results = [];
     private IntPtr _hwnd;
     private bool _hiding;
@@ -40,17 +41,22 @@ public partial class PopupWindow : Window
     // Characters shown in the preview pane; the rest is summarized.
     private const int PreviewLimit = 5_000;
 
+    // Images in the preview pane are decoded at most this wide (enough for the pane at 200% scaling).
+    private const int PreviewImageWidth = 1000;
+    private (string Hash, ImageSource Image)? _previewImage;
+
     // Placement, in physical pixels of the target monitor.
     private RECT _workArea;
     private int _anchorX, _anchorY;
     private bool _anchorBottom;
     private double _monitorScale = 1;
 
-    public PopupWindow(ClipboardHistory history)
+    public PopupWindow(ClipboardHistory history, LocalStorage storage)
     {
         InitializeComponent();
         _listMaxHeight = ResultList.MaxHeight;
         _history = history;
+        _storage = storage;
         _history.Changed += OnHistoryChanged;
 
         SourceInitialized += OnSourceInitialized;
@@ -63,8 +69,11 @@ public partial class PopupWindow : Window
         ResultList.SelectionChanged += (_, _) => UpdatePreview();
     }
 
-    /// <summary>Raised when the user picks an item. The bool is true when the item should also be pasted.</summary>
-    public event Action<ClipItem, bool>? ItemChosen;
+    /// <summary>
+    /// Raised when the user picks an item, with whether it should also be pasted and whether the formatting
+    /// of copied text should be kept (false with Ctrl+Enter).
+    /// </summary>
+    public event Action<ClipItem, bool, bool>? ItemChosen;
 
     /// <summary>True right after the popup closed; lets a tray click toggle it instead of reopening it.</summary>
     public bool WasJustHidden => (DateTime.UtcNow - _hiddenAt).TotalMilliseconds < 400;
@@ -93,6 +102,9 @@ public partial class PopupWindow : Window
         _hiding = true;
         _hiddenAt = DateTime.UtcNow;
         Hide();
+        _previewImage = null; // don't keep a large image in memory while hidden
+        PreviewImage.Source = null;
+        _history.ForgetRemoved(); // removing is final once the popup closes
         _hiding = false;
     }
 
@@ -120,6 +132,7 @@ public partial class PopupWindow : Window
         ResultList.ItemsSource = _results;
 
         Placeholder.Visibility = SearchBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        UndoHint.Visibility = _history.CanUndo ? Visibility.Visible : Visibility.Collapsed;
         bool empty = _results.Count == 0;
         ResultList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         EmptyText.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
@@ -152,11 +165,29 @@ public partial class PopupWindow : Window
             return;
         }
 
-        CopiedText.Text = item.CopiedAt == default ? "" : FormatCopiedAt(item.CopiedAt);
-        PreviewText.Text = item.Content.Length > PreviewLimit
-            ? item.Content[..PreviewLimit] + Loc.T("popup.preview.more", item.Content.Length - PreviewLimit)
-            : item.Content;
-        PreviewScroll.ScrollToTop();
+        var copied = item.CopiedAt == default ? "" : FormatCopiedAt(item.CopiedAt);
+        string[] details =
+        [
+            copied,
+            item.HasFormatting ? Loc.T("popup.formatting") : "",
+            item.ImageText?.Length > 0 ? Loc.T("popup.imageText") : "",
+        ];
+        CopiedText.Text = string.Join(" · ", details.Where(d => d.Length > 0));
+
+        bool isImage = item.Kind == ClipKind.Image;
+        PreviewScroll.Visibility = isImage ? Visibility.Collapsed : Visibility.Visible;
+        PreviewImage.Visibility = isImage ? Visibility.Visible : Visibility.Collapsed;
+        if (isImage)
+        {
+            PreviewImage.Source = LoadPreviewImage(item);
+        }
+        else
+        {
+            PreviewText.Text = item.Content.Length > PreviewLimit
+                ? item.Content[..PreviewLimit] + Loc.T("popup.preview.more", item.Content.Length - PreviewLimit)
+                : item.Content;
+            PreviewScroll.ScrollToTop();
+        }
 
         // The pane takes its (fixed) height from the list, so a full popup keeps its size instead of
         // growing and jumping. Measured before the layout pass, so the window is never resized in between.
@@ -164,6 +195,26 @@ public partial class PopupWindow : Window
         PreviewPane.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         ResultList.MaxHeight = _listMaxHeight - PreviewPane.DesiredSize.Height;
         ResultList.ScrollIntoView(item);
+    }
+
+    /// <summary>Decodes the image of an item for the preview pane; the last one is kept, so a redraw is instant.</summary>
+    private ImageSource? LoadPreviewImage(ClipItem item)
+    {
+        if (_previewImage is { } cached && cached.Hash == item.Content)
+            return cached.Image;
+        if (_storage.LoadData(item)?.Png is not { } png)
+            return null;
+        try
+        {
+            var image = ClipImages.Decode(png, item.ImageWidth > PreviewImageWidth ? PreviewImageWidth : 0);
+            _previewImage = (item.Content, image);
+            return image;
+        }
+        catch (Exception ex)
+        {
+            LocalStorage.Log(ex);
+            return null;
+        }
     }
 
     /// <summary>"Copied 5 min ago", "Copied yesterday at 14:32", "Copied on 3 October at 09:15"…</summary>
@@ -186,16 +237,23 @@ public partial class PopupWindow : Window
         return Loc.T("popup.copied.date", date, time);
     }
 
+    private void Undo()
+    {
+        var restored = _history.Undo(); // refreshes the list through OnHistoryChanged
+        if (restored.Count > 0 && _results.IndexOf(restored[0]) is >= 0 and var index)
+            Select(index);
+    }
+
     private void TogglePin(ClipItem item)
     {
         _history.TogglePin(item); // refreshes the list through OnHistoryChanged
         Select(_results.IndexOf(item));
     }
 
-    private void Choose(ClipItem item, bool paste)
+    private void Choose(ClipItem item, bool paste, bool keepFormatting = true)
     {
         HidePopup();
-        ItemChosen?.Invoke(item, paste);
+        ItemChosen?.Invoke(item, paste, keepFormatting);
     }
 
     // ---------------------------------------------------------------- input
@@ -221,15 +279,20 @@ public partial class PopupWindow : Window
                 Select(ResultList.SelectedIndex - 8);
                 break;
             case Key.Enter:
+                // Shift: copy only. Ctrl: without formatting.
                 if (ResultList.SelectedItem is ClipItem item)
-                    Choose(item, paste: !modifiers.HasFlag(ModifierKeys.Shift));
+                    Choose(item, paste: !modifiers.HasFlag(ModifierKeys.Shift), keepFormatting: !modifiers.HasFlag(ModifierKeys.Control));
                 break;
             case Key.Delete when SearchBox.CaretIndex == SearchBox.Text.Length && SearchBox.SelectionLength == 0:
                 // Delete only acts on the list when it would do nothing in the search box.
                 if (modifiers.HasFlag(ModifierKeys.Control))
-                    _history.Clear();
+                    _history.Clear(undoable: true);
                 else if (ResultList.SelectedItem is ClipItem selected)
-                    _history.Remove(selected);
+                    _history.Remove(selected, undoable: true);
+                break;
+            case Key.Z when modifiers == ModifierKeys.Control && _history.CanUndo:
+                // Brings back removed items; without any, Ctrl+Z undoes typing in the search box.
+                Undo();
                 break;
             case Key.P when modifiers == ModifierKeys.Control:
                 if (ResultList.SelectedItem is ClipItem toPin)
@@ -262,6 +325,14 @@ public partial class PopupWindow : Window
             {
                 e.Handled = true;
                 TogglePin(item);
+                Keyboard.Focus(SearchBox);
+            }
+            else if (source is FrameworkElement { Tag: "RemoveButton" })
+            {
+                e.Handled = true;
+                int index = _results.IndexOf(item);
+                _history.Remove(item, undoable: true); // refreshes the list through OnHistoryChanged
+                Select(index);
                 Keyboard.Focus(SearchBox);
             }
             else

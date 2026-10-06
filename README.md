@@ -6,7 +6,7 @@ A dead-simple, fast clipboard manager for Windows 11.
 
 **Ctrl+C → later Ctrl+Shift+V → type → Enter → done.**
 
-Pastebird runs quietly in the system tray and remembers what you copy: text, URLs, file paths and copied files. One shortcut opens a small popup where you search and paste.
+Pastebird runs quietly in the system tray and remembers what you copy: text (with its formatting), URLs, file paths, copied files and images. One shortcut opens a small popup where you search and paste.
 
 - No main window, no toolbar, no clutter.
 - Keyboard-first: everything works without a mouse.
@@ -19,7 +19,6 @@ Pastebird runs quietly in the system tray and remembers what you copy: text, URL
 Pick one:
 
 - **Microsoft Store:** [get Pastebird from the Microsoft Store](https://apps.microsoft.com/detail/9NS7S1NGXWTG). The Store keeps it up to date.
-- **winget:** run `winget install PSpeters.Pastebird` in a terminal.
 - **Installer:** get the latest `PastebirdSetup-<version>.exe` from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page and run it. Windows may show "Windows protected your PC" because the installer isn't code-signed yet: click **More info → Run anyway**.
 
 Install just one of them. See the [changelog](CHANGELOG.md) for what's new.
@@ -37,17 +36,23 @@ Install just one of them. See the [changelog](CHANGELOG.md) for what's new.
 | `↑` / `↓`, `PgUp` / `PgDn` | Navigate |
 | `Enter` | Put the item on the clipboard and paste it into the previous window |
 | `Shift + Enter` | Copy only, don't paste |
+| `Ctrl + Enter` | Paste as plain text, without formatting; for an image, the text in it (with `Shift`: copy only) |
 | `Ctrl + 1` … `Ctrl + 9` | Paste the 1st to 9th item right away (with `Shift`: copy only) |
-| `Tab` | Show or hide the full content of the selected item and when you copied it |
+| `Tab` | Show or hide the full content (or image) of the selected item and when you copied it |
 | `Ctrl + P` | Pin or unpin the selected item |
 | `Delete` | Remove the selected item (when the cursor is at the end of the search box) |
 | `Ctrl + Delete` | Clear the history (pinned items stay) |
+| `Ctrl + Z` | Bring back what you just removed (while the popup is open) |
 | `Esc` | Close |
 
 - **Click the tray icon** to open the popup next to the icon. **Right-click** for Open Pastebird · Clear history · Settings · Exit.
 - Copying or choosing an item again moves it to the top. Pastebird never stores duplicates.
 - **Pin** items you use often, like a signature or address, with `Ctrl + P` or the pin icon that appears when you hover over an item. Pinned items stay at the top, don't count towards the history size and survive clearing the history.
+- **Remove** an item with `Delete` or the trash icon that appears when you hover over it. Removed by mistake? Press `Ctrl + Z` before you close the popup.
 - Copied files are restored as real files, so pasting in Explorer works, and also as text (the path).
+- Text keeps its formatting (bold, links, tables) when you copied it from Word, Outlook or a web page. `Ctrl + Enter` pastes it as plain text.
+- Images, like screenshots (`Win + Shift + S`) or pictures copied in a browser, show up with a small thumbnail. Press `Tab` to see them larger. Pastebird keeps the 50 most recent images (pinned ones don't count).
+- **Search in screenshots**: Pastebird reads the text in copied images with the text recognition built into Windows, on your pc and without internet. Type a word that is in a screenshot to find it, or press `Ctrl + Enter` to paste its text. This needs text recognition for your language in Windows (Settings → Time & language → Language & region → your language → Language options → Optical character recognition).
 
 ## Settings
 
@@ -58,6 +63,7 @@ Pastebird works out of the box, so you shouldn't need Settings. They cover:
 - **Check for updates automatically** (on by default)
 - **Shortcut** (default `Ctrl + Shift + V`)
 - **History size**: 50, 100, 200 or 500 items (default 200)
+- **Remove old items**: never (default), or after 1, 7 or 30 days. Pinned items stay.
 - **Language**: system default, English or Dutch
 - **Clear history**
 
@@ -76,7 +82,7 @@ You can turn the check off in Settings. The Microsoft Store version is updated b
 
 - Everything stays in `%LOCALAPPDATA%\Pastebird` on your pc: no accounts, telemetry or cloud.
 - The only network request is the daily update check: Pastebird asks GitHub for the latest release and, when you choose to update, downloads the installer. Nothing about you or your clipboard is sent. GitHub sees your IP address, as with any website. You can turn the check off in Settings.
-- Your history is encrypted for your Windows user account. Other accounts and other pcs can't read it.
+- Your history, including images and formatting, is encrypted for your Windows user account. Other accounts and other pcs can't read it.
 - Content that password managers mark as private is never stored.
 - Very large items (over 200,000 characters) are skipped, and the history size is capped.
 
