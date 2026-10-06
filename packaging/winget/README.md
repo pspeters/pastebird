@@ -10,11 +10,11 @@ The Microsoft Store version is already available through winget's `msstore` sour
 
 ## First submission (once, by hand)
 
-The files in this folder describe version 1.4.0. They must be submitted to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) once:
+The files in this folder describe version 1.5.0. They must be submitted to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) once:
 
-1. Check them: `winget validate --manifest packaging\winget`
+1. Check them: copy the three `.yaml` files to an empty folder and run `winget validate --manifest <folder>`. On this folder itself the validator also reads this README and fails.
 2. Fork microsoft/winget-pkgs on GitHub, under your own account.
-3. In the fork, add the three `.yaml` files (not this README) in `manifests/p/PSpeters/Pastebird/1.4.0/`.
+3. In the fork, add the three `.yaml` files (not this README) in `manifests/p/PSpeters/Pastebird/1.5.0/`.
 4. Open a pull request to microsoft/winget-pkgs. Its bots install and scan the package; a moderator merges it, usually within a few days.
 
 ## Later versions (automatic)
