@@ -45,36 +45,46 @@ public sealed class ClipboardHistory
         }
     }
 
-    public void Add(string content, ClipKind kind)
+    /// <summary>
+    /// Adds a copied item, or moves the existing item with the same content to the top and takes over the details
+    /// of <paramref name="copied"/>. Returns the item that is now in the history.
+    /// </summary>
+    public ClipItem Add(ClipItem copied)
     {
-        int index = _items.FindIndex(i => i.Content == content);
-        if (index >= 0 && _items[index].IsPinned)
+        bool isImage = copied.Kind == ClipKind.Image;
+        int index = _items.FindIndex(i => i.Content == copied.Content && (i.Kind == ClipKind.Image) == isImage);
+        if (index < 0)
+        {
+            copied.CopiedAt = DateTime.UtcNow;
+            _items.Insert(PinnedCount, copied);
+            Trim();
+            Changed?.Invoke();
+            return copied;
+        }
+
+        var item = _items[index];
+        bool same = item.Kind == copied.Kind && item.HasFormatting == copied.HasFormatting;
+        item.Kind = copied.Kind;
+        item.HasFormatting = copied.HasFormatting;
+        item.ImageWidth = copied.ImageWidth;
+        item.ImageHeight = copied.ImageHeight;
+        item.Thumbnail = copied.Thumbnail;
+
+        if (item.IsPinned)
         {
             // Pinned items keep their place; just remember it was copied again.
-            _items[index].Kind = kind;
-            _items[index].CopiedAt = DateTime.UtcNow;
+            item.CopiedAt = DateTime.UtcNow;
             Changed?.Invoke();
-            return;
+            return item;
         }
-        if (index >= 0 && index == PinnedCount && _items[index].Kind == kind)
-            return; // same as the most recent item: nothing to do
+        if (index == PinnedCount && same)
+            return item; // same as the most recent item: nothing to do
 
-        ClipItem item;
-        if (index >= 0)
-        {
-            item = _items[index];
-            _items.RemoveAt(index);
-            item.Kind = kind;
-        }
-        else
-        {
-            item = new ClipItem { Content = content, Kind = kind };
-        }
-
+        _items.RemoveAt(index);
         item.CopiedAt = DateTime.UtcNow;
         _items.Insert(PinnedCount, item);
-        Trim();
         Changed?.Invoke();
+        return item;
     }
 
     /// <summary>Marks an item as used and moves it to the top (of the unpinned items; pinned items stay put).</summary>

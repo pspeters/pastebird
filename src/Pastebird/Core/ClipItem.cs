@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Pastebird.Core;
 
-public enum ClipKind { Text, Url, FilePath, Files }
+public enum ClipKind { Text, Url, FilePath, Files, Image }
 
 /// <summary>One entry in the clipboard history.</summary>
 public sealed class ClipItem
@@ -14,12 +14,32 @@ public sealed class ClipItem
     private string? _searchText;
 
     public Guid Id { get; set; } = Guid.NewGuid();
+
+    /// <summary>The text, URL, path or file list. For images: the SHA-256 of the PNG, to recognize the same image again.</summary>
     public string Content { get; set; } = "";
     public DateTime CopiedAt { get; set; }
     public DateTime? LastUsedAt { get; set; }
 
     /// <summary>Pinned items stay at the top, don't count towards the history size and survive "Clear history".</summary>
     public bool IsPinned { get; set; }
+
+    /// <summary>True when the formatting of copied text (HTML/RTF) is stored next to it, see <see cref="ClipData"/>.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool HasFormatting { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public int ImageWidth { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public int ImageHeight { get; set; }
+
+    /// <summary>Small PNG shown in the popup for images; the full image is in <see cref="ClipData"/>.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public byte[]? Thumbnail { get; set; }
+
+    /// <summary>True when the item has a <see cref="ClipData"/> file next to the history.</summary>
+    [JsonIgnore]
+    public bool HasData => HasFormatting || Kind == ClipKind.Image;
 
     public ClipKind Kind
     {
@@ -29,7 +49,7 @@ public sealed class ClipItem
 
     /// <summary>Single-line text shown in the popup.</summary>
     [JsonIgnore]
-    public string Preview => Kind == ClipKind.Files ? BuildPreview() : _preview ??= BuildPreview(); // file lists contain translated text
+    public string Preview => Kind is ClipKind.Files or ClipKind.Image ? BuildPreview() : _preview ??= BuildPreview(); // these contain translated text
 
     /// <summary>Segoe Fluent Icons glyph for the item type.</summary>
     [JsonIgnore]
@@ -38,14 +58,17 @@ public sealed class ClipItem
         ClipKind.Url => "",      // Link
         ClipKind.FilePath => "", // Document
         ClipKind.Files => "",    // Folder
+        ClipKind.Image => "", // Photo
         _ => "",                 // AlignLeft (text)
     };
 
     /// <summary>Lower-cased (and capped) content used by the search.</summary>
-    internal string SearchText => _searchText ??= (Content.Length > 10_000 ? Content[..10_000] : Content).ToLowerInvariant();
+    internal string SearchText => Kind == ClipKind.Image ? Preview.ToLowerInvariant() : _searchText ??= (Content.Length > 10_000 ? Content[..10_000] : Content).ToLowerInvariant();
 
     private string BuildPreview()
     {
+        if (Kind == ClipKind.Image)
+            return Loc.T("item.image", ImageWidth, ImageHeight);
         if (Kind == ClipKind.Files)
         {
             var files = Content.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);

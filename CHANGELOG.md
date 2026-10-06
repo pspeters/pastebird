@@ -14,6 +14,12 @@ The release workflow copies this section into the GitHub release and stops when 
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
 
+## [1.5.0] - 2026-10-06
+
+### Added
+- Pastebird now remembers **images**, like screenshots (Win+Shift+S) and pictures copied in a browser. They show up with a small thumbnail; press Tab to see them larger.
+- Text keeps its **formatting** (bold, links, tables) when you copied it from Word, Outlook or a web page. Press **Ctrl+Enter** to paste it as plain text.
+
 ## [1.4.0] - 2026-10-05
 
 ### Added

@@ -8,12 +8,13 @@ using static Pastebird.Interop.NativeMethods;
 namespace Pastebird.Services;
 
 /// <summary>
-/// Listens for clipboard changes (AddClipboardFormatListener) and reports new text, URLs and file lists.
-/// Content that password managers mark as private is skipped.
+/// Listens for clipboard changes (AddClipboardFormatListener) and reports new text (with its formatting),
+/// URLs, file lists and images. Content that password managers mark as private is skipped.
 /// </summary>
 internal sealed class ClipboardMonitor : IDisposable
 {
     private const int MaxChars = 200_000;
+    private const int MaxFormattingChars = 2_000_000;
 
     private readonly MessageWindow _window;
     private readonly DispatcherTimer _debounce;
@@ -32,13 +33,32 @@ internal sealed class ClipboardMonitor : IDisposable
         AddClipboardFormatListener(_window.Handle);
     }
 
-    public event Action<string, ClipKind>? Captured;
+    /// <summary>Raised with a new item (not yet in the history) and its formatting or image, if any.</summary>
+    public event Action<ClipItem, ClipData?>? Captured;
 
-    /// <summary>Puts an item back on the clipboard. File lists are restored as real files when they still exist.</summary>
-    public void SetClipboard(ClipItem item)
+    /// <summary>
+    /// Puts an item back on the clipboard: text with its formatting unless <paramref name="keepFormatting"/> is false,
+    /// images as PNG and bitmap, and file lists as real files when they still exist.
+    /// </summary>
+    public void SetClipboard(ClipItem item, ClipData? stored, bool keepFormatting)
     {
         var data = new DataObject();
-        data.SetData(DataFormats.UnicodeText, item.Content);
+        if (item.Kind == ClipKind.Image)
+        {
+            if (stored?.Png is not { } png)
+                throw new InvalidOperationException("The image of this item is missing.");
+            data.SetData("PNG", new MemoryStream(png), false);
+            data.SetImage(ClipImages.Decode(png));
+        }
+        else
+        {
+            if (keepFormatting && stored is not null)
+            {
+                if (stored.Html is not null) data.SetData(DataFormats.Html, stored.Html);
+                if (stored.Rtf is not null) data.SetData(DataFormats.Rtf, stored.Rtf);
+            }
+            data.SetData(DataFormats.UnicodeText, item.Content);
+        }
 
         if (item.Kind == ClipKind.Files)
         {
@@ -79,17 +99,50 @@ internal sealed class ClipboardMonitor : IDisposable
 
             if (data.GetDataPresent(DataFormats.FileDrop) && data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } files)
             {
-                Captured?.Invoke(string.Join("\r\n", files), ClipKind.Files);
+                Captured?.Invoke(new ClipItem { Content = string.Join("\r\n", files), Kind = ClipKind.Files }, null);
             }
-            else if (data.GetDataPresent(DataFormats.UnicodeText, true) && data.GetData(DataFormats.UnicodeText, true) is string text)
+            else if (data.GetDataPresent(DataFormats.UnicodeText, true) && data.GetData(DataFormats.UnicodeText, true) is string text
+                     && !string.IsNullOrWhiteSpace(text))
             {
-                if (string.IsNullOrWhiteSpace(text) || text.Length > MaxChars) return;
-                Captured?.Invoke(text, ClipItem.DetectKind(text));
+                // Text wins over an image: apps like Excel and Word also put a picture of copied text on the clipboard.
+                if (text.Length > MaxChars) return;
+                var formatting = ReadFormatting(data);
+                Captured?.Invoke(new ClipItem { Content = text, Kind = ClipItem.DetectKind(text), HasFormatting = formatting is not null }, formatting);
+            }
+            else if (ClipImages.Read(data) is { } image)
+            {
+                _ = CaptureImageAsync(image);
             }
         }
         catch (Exception ex)
         {
             // The clipboard can be locked by another app or hold broken data; skip this change.
+            LocalStorage.Log(ex);
+        }
+    }
+
+    private static ClipData? ReadFormatting(IDataObject data)
+    {
+        var html = ReadFormat(data, DataFormats.Html);
+        var rtf = ReadFormat(data, DataFormats.Rtf);
+        return html is null && rtf is null ? null : new ClipData { Html = html, Rtf = rtf };
+    }
+
+    private static string? ReadFormat(IDataObject data, string format)
+        => data.GetDataPresent(format, false) && data.GetData(format, false) is string { Length: > 0 and <= MaxFormattingChars } value
+            ? value
+            : null;
+
+    /// <summary>Encodes the image and its thumbnail in the background, so a large screenshot doesn't block the UI.</summary>
+    private async Task CaptureImageAsync(ClipboardImage image)
+    {
+        try
+        {
+            if (await Task.Run(() => ClipImages.Create(image)) is var (item, data))
+                Captured?.Invoke(item, data);
+        }
+        catch (Exception ex)
+        {
             LocalStorage.Log(ex);
         }
     }

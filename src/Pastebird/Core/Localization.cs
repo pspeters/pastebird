@@ -51,7 +51,9 @@ public sealed class Loc : INotifyPropertyChanged
         ["popup.copied.today"] = "Copied today at {0}",
         ["popup.copied.yesterday"] = "Copied yesterday at {0}",
         ["popup.copied.date"] = "Copied on {0} at {1}",
+        ["popup.formatting"] = "With formatting, Ctrl+Enter pastes plain text",
         ["item.files"] = "{0} files: ",
+        ["item.image"] = "Image, {0} × {1}",
         ["key.space"] = "Space",
 
         ["tray.open"] = "Open Pastebird",
@@ -141,7 +143,9 @@ public sealed class Loc : INotifyPropertyChanged
         ["popup.copied.today"] = "Vandaag om {0} gekopieerd",
         ["popup.copied.yesterday"] = "Gisteren om {0} gekopieerd",
         ["popup.copied.date"] = "Op {0} om {1} gekopieerd",
+        ["popup.formatting"] = "Met opmaak, Ctrl+Enter plakt platte tekst",
         ["item.files"] = "{0} bestanden: ",
+        ["item.image"] = "Afbeelding, {0} × {1}",
         ["key.space"] = "Spatie",
 
         ["tray.open"] = "Open Pastebird",

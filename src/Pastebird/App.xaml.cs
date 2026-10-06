@@ -92,9 +92,9 @@ public partial class App : Application
         SystemTheme.EnableDarkMenus(_messages.Handle);
 
         _monitor = new ClipboardMonitor(_messages);
-        _monitor.Captured += _history.Add;
+        _monitor.Captured += OnCaptured;
 
-        _popup = new PopupWindow(_history);
+        _popup = new PopupWindow(_history, _storage);
         _popup.ItemChosen += OnItemChosen;
         _popup.Prepare();
 
@@ -174,11 +174,17 @@ public partial class App : Application
         _popup!.ShowPopup(placement, foreground);
     }
 
-    private void OnItemChosen(ClipItem item, bool paste)
+    private void OnCaptured(ClipItem copied, ClipData? data)
+    {
+        var item = _history.Add(copied);
+        _storage.SaveData(item, data);
+    }
+
+    private void OnItemChosen(ClipItem item, bool paste, bool keepFormatting)
     {
         try
         {
-            _monitor!.SetClipboard(item);
+            _monitor!.SetClipboard(item, _storage.LoadData(item), keepFormatting);
         }
         catch (Exception ex) when (ex is ExternalException or InvalidOperationException)
         {
