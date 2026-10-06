@@ -16,6 +16,7 @@ The files in this folder describe version 1.5.0. They must be submitted to [micr
 2. Fork microsoft/winget-pkgs on GitHub, under your own account.
 3. In the fork, add the three `.yaml` files (not this README) in `manifests/p/PSpeters/Pastebird/1.5.0/`.
 4. Open a pull request to microsoft/winget-pkgs. Its bots install and scan the package; a moderator merges it, usually within a few days.
+5. Once it is merged, mention winget again: add `- **winget:** run \`winget install PSpeters.Pastebird\` in a terminal.` to the Download section of the main README, and set `PB_WINGET_ID` to `'PSpeters.Pastebird'` in `includes/config.php` of the website.
 
 ## Later versions (automatic)
 
