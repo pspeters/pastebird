@@ -164,7 +164,12 @@ public partial class PopupWindow : Window
         }
 
         var copied = item.CopiedAt == default ? "" : FormatCopiedAt(item.CopiedAt);
-        string[] details = [copied, item.HasFormatting ? Loc.T("popup.formatting") : ""];
+        string[] details =
+        [
+            copied,
+            item.HasFormatting ? Loc.T("popup.formatting") : "",
+            item.ImageText?.Length > 0 ? Loc.T("popup.imageText") : "",
+        ];
         CopiedText.Text = string.Join(" · ", details.Where(d => d.Length > 0));
 
         bool isImage = item.Kind == ClipKind.Image;

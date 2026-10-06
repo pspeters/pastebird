@@ -14,6 +14,15 @@ The release workflow copies this section into the GitHub release and stops when 
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
 
+## [1.6.0] - 2026-10-06
+
+### Added
+- **Search in screenshots:** Pastebird reads the text in copied images with the text recognition built into Windows, so typing a word finds the screenshot it is in. Press **Ctrl+Enter** on an image to paste its text. This works on your pc, without internet.
+- **Remove old items** in Settings: let Pastebird remove items after 1, 7 or 30 days. Pinned items stay.
+
+### Changed
+- Pastebird keeps the 50 most recent images, so screenshots don't fill up your disk. Pinned images don't count.
+
 ## [1.5.0] - 2026-10-06
 
 ### Added

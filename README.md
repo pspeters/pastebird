@@ -36,7 +36,7 @@ Install just one of them. See the [changelog](CHANGELOG.md) for what's new.
 | `↑` / `↓`, `PgUp` / `PgDn` | Navigate |
 | `Enter` | Put the item on the clipboard and paste it into the previous window |
 | `Shift + Enter` | Copy only, don't paste |
-| `Ctrl + Enter` | Paste as plain text, without formatting (with `Shift`: copy only) |
+| `Ctrl + Enter` | Paste as plain text, without formatting; for an image, the text in it (with `Shift`: copy only) |
 | `Ctrl + 1` … `Ctrl + 9` | Paste the 1st to 9th item right away (with `Shift`: copy only) |
 | `Tab` | Show or hide the full content (or image) of the selected item and when you copied it |
 | `Ctrl + P` | Pin or unpin the selected item |
@@ -49,7 +49,8 @@ Install just one of them. See the [changelog](CHANGELOG.md) for what's new.
 - **Pin** items you use often, like a signature or address, with `Ctrl + P` or the pin icon that appears when you hover over an item. Pinned items stay at the top, don't count towards the history size and survive clearing the history.
 - Copied files are restored as real files, so pasting in Explorer works, and also as text (the path).
 - Text keeps its formatting (bold, links, tables) when you copied it from Word, Outlook or a web page. `Ctrl + Enter` pastes it as plain text.
-- Images, like screenshots (`Win + Shift + S`) or pictures copied in a browser, show up with a small thumbnail. Press `Tab` to see them larger.
+- Images, like screenshots (`Win + Shift + S`) or pictures copied in a browser, show up with a small thumbnail. Press `Tab` to see them larger. Pastebird keeps the 50 most recent images (pinned ones don't count).
+- **Search in screenshots**: Pastebird reads the text in copied images with the text recognition built into Windows, on your pc and without internet. Type a word that is in a screenshot to find it, or press `Ctrl + Enter` to paste its text. This needs text recognition for your language in Windows (Settings → Time & language → Language & region → your language → Language options → Optical character recognition).
 
 ## Settings
 
@@ -60,6 +61,7 @@ Pastebird works out of the box, so you shouldn't need Settings. They cover:
 - **Check for updates automatically** (on by default)
 - **Shortcut** (default `Ctrl + Shift + V`)
 - **History size**: 50, 100, 200 or 500 items (default 200)
+- **Remove old items**: never (default), or after 1, 7 or 30 days. Pinned items stay.
 - **Language**: system default, English or Dutch
 - **Clear history**
 

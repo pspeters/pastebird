@@ -12,6 +12,7 @@ public sealed class ClipItem
     private ClipKind _kind;
     private string? _preview;
     private string? _searchText;
+    private string? _imageText;
 
     public Guid Id { get; set; } = Guid.NewGuid();
 
@@ -36,6 +37,14 @@ public sealed class ClipItem
     /// <summary>Small PNG shown in the popup for images; the full image is in <see cref="ClipData"/>.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public byte[]? Thumbnail { get; set; }
+
+    /// <summary>Text recognized in an image ("" when it has none); null until the recognition has run.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ImageText
+    {
+        get => _imageText;
+        set { _imageText = value; _searchText = null; }
+    }
 
     /// <summary>True when the item has a <see cref="ClipData"/> file next to the history.</summary>
     [JsonIgnore]
@@ -62,13 +71,22 @@ public sealed class ClipItem
         _ => "",                 // AlignLeft (text)
     };
 
-    /// <summary>Lower-cased (and capped) content used by the search.</summary>
-    internal string SearchText => Kind == ClipKind.Image ? Preview.ToLowerInvariant() : _searchText ??= (Content.Length > 10_000 ? Content[..10_000] : Content).ToLowerInvariant();
+    /// <summary>Lower-cased (and capped) content used by the search; for images the label and the recognized text.</summary>
+    internal string SearchText => _searchText ??= Kind == ClipKind.Image
+        ? Capped(Loc.T("item.image", ImageWidth, ImageHeight) + "\n" + ImageText).ToLowerInvariant()
+        : Capped(Content).ToLowerInvariant();
+
+    private static string Capped(string text) => text.Length > 10_000 ? text[..10_000] : text;
 
     private string BuildPreview()
     {
         if (Kind == ClipKind.Image)
-            return Loc.T("item.image", ImageWidth, ImageHeight);
+        {
+            // The start of the recognized text helps to tell screenshots apart.
+            var label = Loc.T("item.image", ImageWidth, ImageHeight);
+            var text = ImageText?.Length > 0 ? CollapseWhitespace(ImageText.Length > 200 ? ImageText[..200] : ImageText) : "";
+            return text.Length > 0 ? $"{label} · {text}" : label;
+        }
         if (Kind == ClipKind.Files)
         {
             var files = Content.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
@@ -76,8 +94,12 @@ public sealed class ClipItem
                 return Loc.T("item.files", files.Length) + string.Join(", ", files.Take(6).Select(Path.GetFileName));
         }
 
-        // Collapse all whitespace (newlines, tabs) so multi-line text fits on one row.
-        var source = Content.Length > 400 ? Content.AsSpan(0, 400) : Content.AsSpan();
+        return CollapseWhitespace(Content.Length > 400 ? Content[..400] : Content);
+    }
+
+    /// <summary>Collapses all whitespace (newlines, tabs) so multi-line text fits on one row.</summary>
+    private static string CollapseWhitespace(string source)
+    {
         var sb = new StringBuilder(source.Length);
         bool space = false;
         foreach (var c in source)

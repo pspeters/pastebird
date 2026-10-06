@@ -3,10 +3,13 @@ namespace Pastebird.Core;
 /// <summary>
 /// The in-memory history: pinned items first, then the rest newest first. Copying something that already
 /// exists moves it to the top instead of creating a duplicate. Only unpinned items count towards
-/// <see cref="MaxItems"/> and are removed by <see cref="Clear"/>.
+/// <see cref="MaxItems"/> and are removed by <see cref="Clear"/>. Of the unpinned items, at most
+/// <see cref="MaxImages"/> are images.
 /// </summary>
 public sealed class ClipboardHistory
 {
+    public const int MaxImages = 50;
+
     private readonly List<ClipItem> _items;
     private int _maxItems;
 
@@ -120,11 +123,42 @@ public sealed class ClipboardHistory
         Changed?.Invoke();
     }
 
+    /// <summary>Stores the text recognized in an image, if the item is still in the history.</summary>
+    public void SetImageText(ClipItem item, string text)
+    {
+        if (!_items.Contains(item)) return;
+        item.ImageText = text;
+        Changed?.Invoke();
+    }
+
+    /// <summary>Removes the unpinned items copied before <paramref name="cutoffUtc"/>. Returns true when something was removed.</summary>
+    public bool RemoveCopiedBefore(DateTime cutoffUtc)
+    {
+        if (_items.RemoveAll(i => !i.IsPinned && i.CopiedAt < cutoffUtc) == 0) return false;
+        Changed?.Invoke();
+        return true;
+    }
+
     private bool Trim()
     {
+        bool trimmed = false;
         int limit = PinnedCount + _maxItems;
-        if (_items.Count <= limit) return false;
-        _items.RemoveRange(limit, _items.Count - limit);
-        return true;
+        if (_items.Count > limit)
+        {
+            _items.RemoveRange(limit, _items.Count - limit);
+            trimmed = true;
+        }
+
+        // Images take far more space than text, so only the most recent ones are kept.
+        int images = 0;
+        for (int i = PinnedCount; i < _items.Count; i++)
+        {
+            if (_items[i].Kind == ClipKind.Image && ++images > MaxImages)
+            {
+                _items.RemoveAt(i--);
+                trimmed = true;
+            }
+        }
+        return trimmed;
     }
 }

@@ -56,6 +56,11 @@ public partial class SettingsWindow : Window
             if (!_updatingLists && HistorySizeBox.SelectedIndex >= 0)
                 _app.SetMaxItems(AppSettings.HistorySizes[HistorySizeBox.SelectedIndex]);
         };
+        KeepDaysBox.SelectionChanged += (_, _) =>
+        {
+            if (!_updatingLists && KeepDaysBox.SelectedIndex >= 0)
+                _app.SetKeepDays(AppSettings.KeepDayChoices[KeepDaysBox.SelectedIndex]);
+        };
         LanguageBox.SelectionChanged += (_, _) =>
         {
             if (!_updatingLists && LanguageBox.SelectedIndex >= 0)
@@ -103,6 +108,9 @@ public partial class SettingsWindow : Window
         _updatingLists = true;
         HistorySizeBox.ItemsSource = AppSettings.HistorySizes.Select(n => Loc.T("settings.history.items", n)).ToList();
         HistorySizeBox.SelectedIndex = Array.IndexOf(AppSettings.HistorySizes, _app.Settings.MaxItems);
+        KeepDaysBox.ItemsSource = AppSettings.KeepDayChoices
+            .Select(d => d == 0 ? Loc.T("settings.keep.always") : Loc.T(d == 1 ? "settings.keep.day" : "settings.keep.days", d)).ToList();
+        KeepDaysBox.SelectedIndex = Array.IndexOf(AppSettings.KeepDayChoices, _app.Settings.KeepDays);
         LanguageBox.ItemsSource = new[] { Loc.T("settings.language.system"), "English", "Nederlands" };
         LanguageBox.SelectedIndex = (int)_app.Settings.Language;
         _updatingLists = false;

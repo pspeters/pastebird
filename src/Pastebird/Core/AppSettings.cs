@@ -7,6 +7,9 @@ public sealed class AppSettings
 {
     public static readonly int[] HistorySizes = [50, 100, 200, 500];
 
+    /// <summary>Choices for <see cref="KeepDays"/>; 0 keeps items until the history is full.</summary>
+    public static readonly int[] KeepDayChoices = [0, 1, 7, 30];
+
     public bool StartWithWindows { get; set; } = true;
     public bool PasteAutomatically { get; set; } = true;
     public bool CheckForUpdates { get; set; } = true;
@@ -14,6 +17,9 @@ public sealed class AppSettings
     /// <summary>Version that ran last time; a lower value means Pastebird was just updated.</summary>
     public string? LastRunVersion { get; set; }
     public int MaxItems { get; set; } = 200;
+
+    /// <summary>Unpinned items older than this many days are removed; 0 never removes them by age.</summary>
+    public int KeepDays { get; set; }
     public AppLanguage Language { get; set; } = AppLanguage.System;
     public int HotkeyModifiers { get; set; } = Hotkey.Default.Modifiers;
     public int HotkeyKey { get; set; } = Hotkey.Default.VirtualKey;
@@ -28,6 +34,7 @@ public sealed class AppSettings
     public AppSettings Normalize()
     {
         if (!HistorySizes.Contains(MaxItems)) MaxItems = 200;
+        if (!KeepDayChoices.Contains(KeepDays)) KeepDays = 0;
         if (!Hotkey.IsValid) Hotkey = Hotkey.Default;
         if (!Enum.IsDefined(Language)) Language = AppLanguage.System;
         return this;

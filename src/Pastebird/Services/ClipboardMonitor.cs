@@ -38,12 +38,17 @@ internal sealed class ClipboardMonitor : IDisposable
 
     /// <summary>
     /// Puts an item back on the clipboard: text with its formatting unless <paramref name="keepFormatting"/> is false,
-    /// images as PNG and bitmap, and file lists as real files when they still exist.
+    /// images as PNG and bitmap (or their recognized text when <paramref name="keepFormatting"/> is false),
+    /// and file lists as real files when they still exist.
     /// </summary>
     public void SetClipboard(ClipItem item, ClipData? stored, bool keepFormatting)
     {
         var data = new DataObject();
-        if (item.Kind == ClipKind.Image)
+        if (item.Kind == ClipKind.Image && !keepFormatting && !string.IsNullOrEmpty(item.ImageText))
+        {
+            data.SetData(DataFormats.UnicodeText, item.ImageText); // Ctrl+Enter: the text in the image
+        }
+        else if (item.Kind == ClipKind.Image)
         {
             if (stored?.Png is not { } png)
                 throw new InvalidOperationException("The image of this item is missing.");
