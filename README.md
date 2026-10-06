@@ -8,6 +8,21 @@ A dead-simple, fast clipboard manager for Windows 11.
 
 Pastebird runs quietly in the system tray and remembers what you copy: text (with its formatting), URLs, file paths, copied files and images. One shortcut opens a small popup where you search and paste.
 
+<p align="center"><img src="docs/screenshots/pastebird-1-history.png" alt="The Pastebird popup with pinned items, a link, a file path, a screenshot and text" width="800"></p>
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/pastebird-2-search.png" alt="Typing proj finds the project files"></td>
+    <td><img src="docs/screenshots/pastebird-3-preview.png" alt="Tab shows the whole item and when you copied it"></td>
+    <td><img src="docs/screenshots/pastebird-4-dark.png" alt="Pinned items in dark mode"></td>
+  </tr>
+  <tr>
+    <td align="center">Fuzzy search</td>
+    <td align="center">Preview with <code>Tab</code></td>
+    <td align="center">Pinned items, dark mode</td>
+  </tr>
+</table>
+
 - No main window, no toolbar, no clutter.
 - Keyboard-first: everything works without a mouse.
 - Native Windows 11 look with acrylic, rounded corners and light/dark mode.
