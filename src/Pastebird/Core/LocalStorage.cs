@@ -42,15 +42,18 @@ public sealed class LocalStorage
         }
     }
 
-    /// <summary>Saves the history and removes the <see cref="ClipData"/> files of items that are no longer in it.</summary>
-    public void SaveHistory(IEnumerable<ClipItem> items)
+    /// <summary>
+    /// Saves the history and removes the <see cref="ClipData"/> files of items that are no longer in it,
+    /// except those of <paramref name="removedButUndoable"/>.
+    /// </summary>
+    public void SaveHistory(IEnumerable<ClipItem> items, IEnumerable<ClipItem> removedButUndoable)
     {
         try
         {
             var list = items.ToList();
             var json = JsonSerializer.SerializeToUtf8Bytes(list, PastebirdJson.Default.ListClipItem);
             WriteAtomic(HistoryPath, ProtectedData.Protect(json, Entropy, DataProtectionScope.CurrentUser));
-            RemoveUnusedData(list);
+            RemoveUnusedData([.. list, .. removedButUndoable]);
         }
         catch (Exception ex)
         {

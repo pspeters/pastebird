@@ -104,6 +104,7 @@ public partial class PopupWindow : Window
         Hide();
         _previewImage = null; // don't keep a large image in memory while hidden
         PreviewImage.Source = null;
+        _history.ForgetRemoved(); // removing is final once the popup closes
         _hiding = false;
     }
 
@@ -131,6 +132,7 @@ public partial class PopupWindow : Window
         ResultList.ItemsSource = _results;
 
         Placeholder.Visibility = SearchBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        UndoHint.Visibility = _history.CanUndo ? Visibility.Visible : Visibility.Collapsed;
         bool empty = _results.Count == 0;
         ResultList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         EmptyText.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
@@ -235,6 +237,13 @@ public partial class PopupWindow : Window
         return Loc.T("popup.copied.date", date, time);
     }
 
+    private void Undo()
+    {
+        var restored = _history.Undo(); // refreshes the list through OnHistoryChanged
+        if (restored.Count > 0 && _results.IndexOf(restored[0]) is >= 0 and var index)
+            Select(index);
+    }
+
     private void TogglePin(ClipItem item)
     {
         _history.TogglePin(item); // refreshes the list through OnHistoryChanged
@@ -277,9 +286,13 @@ public partial class PopupWindow : Window
             case Key.Delete when SearchBox.CaretIndex == SearchBox.Text.Length && SearchBox.SelectionLength == 0:
                 // Delete only acts on the list when it would do nothing in the search box.
                 if (modifiers.HasFlag(ModifierKeys.Control))
-                    _history.Clear();
+                    _history.Clear(undoable: true);
                 else if (ResultList.SelectedItem is ClipItem selected)
-                    _history.Remove(selected);
+                    _history.Remove(selected, undoable: true);
+                break;
+            case Key.Z when modifiers == ModifierKeys.Control && _history.CanUndo:
+                // Brings back removed items; without any, Ctrl+Z undoes typing in the search box.
+                Undo();
                 break;
             case Key.P when modifiers == ModifierKeys.Control:
                 if (ResultList.SelectedItem is ClipItem toPin)
@@ -312,6 +325,14 @@ public partial class PopupWindow : Window
             {
                 e.Handled = true;
                 TogglePin(item);
+                Keyboard.Focus(SearchBox);
+            }
+            else if (source is FrameworkElement { Tag: "RemoveButton" })
+            {
+                e.Handled = true;
+                int index = _results.IndexOf(item);
+                _history.Remove(item, undoable: true); // refreshes the list through OnHistoryChanged
+                Select(index);
                 Keyboard.Focus(SearchBox);
             }
             else

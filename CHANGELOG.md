@@ -14,6 +14,12 @@ The release workflow copies this section into the GitHub release and stops when 
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
 
+## [1.7.0] - 2026-10-06
+
+### Added
+- A trash icon appears when you hover over an item, so you can remove it with the mouse too.
+- Removed something by mistake? Press **Ctrl+Z** in the popup to bring it back, also after Ctrl+Delete. This works until you close the popup.
+
 ## [1.6.0] - 2026-10-06
 
 ### Added

@@ -42,11 +42,13 @@ Install just one of them. See the [changelog](CHANGELOG.md) for what's new.
 | `Ctrl + P` | Pin or unpin the selected item |
 | `Delete` | Remove the selected item (when the cursor is at the end of the search box) |
 | `Ctrl + Delete` | Clear the history (pinned items stay) |
+| `Ctrl + Z` | Bring back what you just removed (while the popup is open) |
 | `Esc` | Close |
 
 - **Click the tray icon** to open the popup next to the icon. **Right-click** for Open Pastebird · Clear history · Settings · Exit.
 - Copying or choosing an item again moves it to the top. Pastebird never stores duplicates.
 - **Pin** items you use often, like a signature or address, with `Ctrl + P` or the pin icon that appears when you hover over an item. Pinned items stay at the top, don't count towards the history size and survive clearing the history.
+- **Remove** an item with `Delete` or the trash icon that appears when you hover over it. Removed by mistake? Press `Ctrl + Z` before you close the popup.
 - Copied files are restored as real files, so pasting in Explorer works, and also as text (the path).
 - Text keeps its formatting (bold, links, tables) when you copied it from Word, Outlook or a web page. `Ctrl + Enter` pastes it as plain text.
 - Images, like screenshots (`Win + Shift + S`) or pictures copied in a browser, show up with a small thumbnail. Press `Tab` to see them larger. Pastebird keeps the 50 most recent images (pinned ones don't count).

@@ -11,6 +11,7 @@ public sealed class ClipboardHistory
     public const int MaxImages = 50;
 
     private readonly List<ClipItem> _items;
+    private readonly Stack<List<(int Index, ClipItem Item)>> _removed = new();
     private int _maxItems;
 
     public ClipboardHistory(IEnumerable<ClipItem> items, int maxItems)
@@ -109,18 +110,58 @@ public sealed class ClipboardHistory
         Changed?.Invoke();
     }
 
-    public void Remove(ClipItem item)
+    /// <summary>Removes an item. With <paramref name="undoable"/>, <see cref="Undo"/> can bring it back.</summary>
+    public void Remove(ClipItem item, bool undoable = false)
     {
-        if (_items.Remove(item))
-            Changed?.Invoke();
+        int index = _items.IndexOf(item);
+        if (index < 0) return;
+        _items.RemoveAt(index);
+        if (undoable) _removed.Push([(index, item)]);
+        Changed?.Invoke();
     }
 
-    /// <summary>Removes all unpinned items.</summary>
-    public void Clear()
+    /// <summary>Removes all unpinned items. With <paramref name="undoable"/>, <see cref="Undo"/> can bring them back.</summary>
+    public void Clear(bool undoable = false)
     {
         if (!HasUnpinnedItems) return;
-        _items.RemoveRange(PinnedCount, _items.Count - PinnedCount);
+        int start = PinnedCount;
+        if (undoable) _removed.Push([.. _items.Skip(start).Select((item, i) => (start + i, item))]);
+        _items.RemoveRange(start, _items.Count - start);
         Changed?.Invoke();
+    }
+
+    /// <summary>Items removed with undo, newest action first. Their images and formatting are kept until <see cref="ForgetRemoved"/>.</summary>
+    public IEnumerable<ClipItem> RecentlyRemoved => _removed.SelectMany(action => action.Select(r => r.Item));
+
+    public bool CanUndo => _removed.Count > 0;
+
+    /// <summary>Brings back the items of the last undoable remove or clear, at their old place. Returns them.</summary>
+    public List<ClipItem> Undo()
+    {
+        if (!_removed.TryPop(out var action)) return [];
+        var restored = new List<ClipItem>();
+        foreach (var (index, item) in action)
+        {
+            // Copied again in the meantime: the item is already back.
+            bool isImage = item.Kind == ClipKind.Image;
+            if (_items.Any(i => i.Content == item.Content && (i.Kind == ClipKind.Image) == isImage)) continue;
+
+            // Pinned items go back among the pinned ones, the others below them.
+            int pinned = PinnedCount;
+            _items.Insert(item.IsPinned ? Math.Min(index, pinned) : Math.Clamp(index, pinned, _items.Count), item);
+            restored.Add(item);
+        }
+        Trim();
+        Changed?.Invoke();
+        return restored;
+    }
+
+    /// <summary>Ends the chance to undo (when the popup closes), so the removed items' files can be deleted.</summary>
+    public void ForgetRemoved()
+    {
+        if (_removed.Count == 0) return;
+        _removed.Clear();
+        Changed?.Invoke(); // saving removes the files that are no longer needed
     }
 
     /// <summary>Stores the text recognized in an image, if the item is still in the history.</summary>

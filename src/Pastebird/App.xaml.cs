@@ -435,7 +435,7 @@ public partial class App : Application
     private void SaveHistoryNow()
     {
         _saveTimer.Stop();
-        _storage.SaveHistory(_history.Items);
+        _storage.SaveHistory(_history.Items, _history.RecentlyRemoved);
     }
 
     private void ExitApp()
