@@ -144,8 +144,10 @@
                 </StackPanel>
             </Border>
 
+            <!-- Foreground: a ListBox otherwise uses the system's (black) text color, also in dark mode. -->
             <ListBox x:Name="ResultList" Margin="6,5,6,6" MaxHeight="370"
                      Background="Transparent" BorderThickness="0" Padding="0" Focusable="False"
+                     Foreground="{DynamicResource TextPrimary}"
                      ItemContainerStyle="{StaticResource ClipItemStyle}"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      VirtualizingPanel.IsVirtualizing="True"
