@@ -63,6 +63,12 @@ public partial class App : Application
             return;
         }
 
+        // The Microsoft Store closes Pastebird to update it and only starts it again for apps that ask for that.
+        // Only after an update: not after a crash, a hang or a reboot (autostart covers that). The installer
+        // version restarts itself after an update, so it doesn't register.
+        if (AutoStart.IsPackaged)
+            RegisterApplicationRestart(null, RESTART_NO_CRASH | RESTART_NO_HANG | RESTART_NO_REBOOT);
+
         DispatcherUnhandledException += (_, args) =>
         {
             LocalStorage.Log(args.Exception);

@@ -14,6 +14,12 @@ The release workflow copies this section into the GitHub release and stops when 
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
 
+## [1.7.1] - 2026-10-06
+
+### Fixed
+- The items in the popup are readable again in dark mode.
+- The Microsoft Store version starts again by itself after the Store has updated it.
+
 ## [1.7.0] - 2026-10-06
 
 ### Added

@@ -24,6 +24,10 @@ internal static class NativeMethods
 
     public const int ASFW_ANY = -1;
 
+    // ---- Restart after an update ----
+    public const int RESTART_NO_CRASH = 1, RESTART_NO_HANG = 2, RESTART_NO_REBOOT = 8;
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern int RegisterApplicationRestart(string? commandLine, int flags);
+
     // ---- Clipboard ----
     [DllImport("user32.dll", SetLastError = true)] public static extern bool AddClipboardFormatListener(IntPtr hwnd);
     [DllImport("user32.dll", SetLastError = true)] public static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
