@@ -13,7 +13,8 @@ public sealed record UpdateInfo(Version Version, string DownloadUrl, long Size, 
 /// <summary>
 /// Checks GitHub for a newer release (shortly after start, then daily) and installs it on request:
 /// downloads the installer, verifies size and SHA-256 from GitHub, runs it silently and lets it restart Pastebird.
-/// Only the release information and the installer are requested; nothing about the user is sent.
+/// The installer is downloaded through pastebird.app/update.php, which counts the update (only the old and the new
+/// version number) and forwards to GitHub. Nothing else about the user is sent.
 /// Not used in the Microsoft Store version, which the Store keeps up to date.
 /// </summary>
 internal sealed class UpdateService : IDisposable
@@ -130,21 +131,40 @@ internal sealed class UpdateService : IDisposable
             Directory.CreateDirectory(folder);
             var path = Path.Combine(folder, $"PastebirdSetup-{update.Version}.exe");
 
-            await using (var source = await _http.GetStreamAsync(update.DownloadUrl))
-            await using (var file = File.Create(path))
-                await source.CopyToAsync(file);
+            // First through pastebird.app, which counts the update (only the two version numbers) and forwards to the
+            // same installer on GitHub; only when GitHub published its SHA-256, so the file is always checked against
+            // GitHub, whatever the website sends. If that fails, straight from GitHub, as before.
+            var sources = new List<string>();
+            if (update.Sha256 is not null)
+                sources.Add($"{AppInfo.UpdateDownloadUrl}?to={update.Version}&from={AppInfo.Version}");
+            sources.Add(update.DownloadUrl);
 
-            var bytes = await File.ReadAllBytesAsync(path);
-            bool valid = bytes.LongLength == update.Size
-                && (update.Sha256 is null || Convert.ToHexStringLower(SHA256.HashData(bytes)) == update.Sha256.ToLowerInvariant());
-            if (!valid)
+            foreach (var url in sources)
             {
-                File.Delete(path);
-                throw new InvalidDataException($"Downloaded installer for {update.Version} failed verification.");
-            }
+                try
+                {
+                    await using (var source = await _http.GetStreamAsync(url))
+                    await using (var file = File.Create(path))
+                        await source.CopyToAsync(file);
+                }
+                catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
+                {
+                    LocalStorage.Log(ex);
+                    continue;
+                }
 
-            Process.Start(new ProcessStartInfo(path, "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART") { UseShellExecute = true });
-            return true;
+                var bytes = await File.ReadAllBytesAsync(path);
+                bool valid = bytes.LongLength == update.Size
+                    && (update.Sha256 is null || Convert.ToHexStringLower(SHA256.HashData(bytes)) == update.Sha256.ToLowerInvariant());
+                if (valid)
+                {
+                    Process.Start(new ProcessStartInfo(path, "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART") { UseShellExecute = true });
+                    return true;
+                }
+                File.Delete(path);
+                LocalStorage.Log(new InvalidDataException($"Downloaded installer for {update.Version} from {url} failed verification."));
+            }
+            return false;
         }
         catch (Exception ex)
         {

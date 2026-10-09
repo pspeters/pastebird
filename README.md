@@ -28,7 +28,7 @@ Pastebird runs quietly in the system tray and remembers what you copy: text (wit
 - No main window, no toolbar, no clutter.
 - Keyboard-first: everything works without a mouse.
 - Native Windows 11 look with acrylic, rounded corners and light/dark mode.
-- 100% local: no account, no cloud, no telemetry. The only network request is a daily update check with GitHub.
+- 100% local: no account, no cloud, no telemetry. The only network requests are for updates: a daily check with GitHub, and the download of a new version.
 - Available in English and Dutch.
 
 ## Download
@@ -96,7 +96,7 @@ You can turn the check off in Settings. The Microsoft Store version is updated b
 ## Privacy
 
 - Everything stays in `%LOCALAPPDATA%\Pastebird` on your pc: no accounts, telemetry or cloud.
-- The only network request is the daily update check: Pastebird asks GitHub for the latest release and, when you choose to update, downloads the installer. Nothing about you or your clipboard is sent. GitHub sees your IP address, as with any website. You can turn the check off in Settings.
+- The only network requests are for updates: once a day Pastebird asks GitHub for the latest release, and when you choose to update, it downloads the installer through `pastebird.app/update.php`. That page counts that an update happened (only the old and new version number, no IP address) and forwards to the installer on GitHub; Pastebird checks the file against the SHA-256 that GitHub publishes, and downloads straight from GitHub if pastebird.app can't be reached. Nothing about you or your clipboard is sent. GitHub and pastebird.app see your IP address, as with any website. You can turn the check off in Settings.
 - Your history, including images and formatting, is encrypted for your Windows user account. Other accounts and other pcs can't read it.
 - Content that password managers mark as private is never stored.
 - Very large items (over 200,000 characters) are skipped, and the history size is capped.
