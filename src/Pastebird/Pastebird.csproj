@@ -14,7 +14,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
     <Product>Pastebird</Product>
-    <Version>1.7.1</Version>
+    <Version>1.7.2</Version>
     <Description>Pastebird - simple clipboard history for Windows</Description>
 
     <!-- Small footprint: no satellite assemblies, workstation non-concurrent GC. -->

@@ -14,6 +14,11 @@ The release workflow copies this section into the GitHub release and stops when 
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
 
+## [1.7.2] - 2026-10-09
+
+### Changed
+- Updates are downloaded through pastebird.app, which only counts that an update happened: the old and the new version number, nothing else. The installer is still checked against the fingerprint GitHub publishes, and Pastebird downloads straight from GitHub if the website can't be reached.
+
 ## [1.7.1] - 2026-10-06
 
 ### Fixed
