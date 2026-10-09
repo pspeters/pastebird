@@ -6,6 +6,8 @@ A dead-simple, fast clipboard manager for Windows 11.
 
 **Ctrl+C → later Ctrl+Shift+V → type → Enter → done.**
 
+<p><a href="https://apps.microsoft.com/detail/9NS7S1NGXWTG"><img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" alt="Get it from Microsoft"></a></p>
+
 Pastebird runs quietly in the system tray and remembers what you copy: text (with its formatting), URLs, file paths, copied files and images. One shortcut opens a small popup where you search and paste.
 
 <p align="center"><img src="docs/screenshots/pastebird-1-history.png" alt="The Pastebird popup with pinned items, a link, a file path, a screenshot and text" width="800"></p>
@@ -31,10 +33,8 @@ Pastebird runs quietly in the system tray and remembers what you copy: text (wit
 
 ## Download
 
-Pick one:
-
-- **Microsoft Store:** [get Pastebird from the Microsoft Store](https://apps.microsoft.com/detail/9NS7S1NGXWTG). The Store keeps it up to date.
-- **Installer:** get the latest `PastebirdSetup-<version>.exe` from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page and run it. Windows may show "Windows protected your PC" because the installer isn't code-signed yet: click **More info → Run anyway**.
+- **Microsoft Store (recommended):** [get Pastebird from the Microsoft Store](https://apps.microsoft.com/detail/9NS7S1NGXWTG). It installs without a Windows warning and the Store keeps it up to date.
+- **Or the installer:** get the latest `PastebirdSetup-<version>.exe` from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page and run it. Windows may show "Windows protected your PC" because the installer isn't code-signed yet: click **More info → Run anyway**.
 
 Install just one of them. See the [changelog](CHANGELOG.md) for what's new.
 
