@@ -63,29 +63,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "published=true" >> $env:GITHUB_OUTPUT
 
-  # Posts the changelog of the new version on X, with a link to pastebird.app/changelog.php that has
-  # utm_source=x and utm_campaign=release-<version> (see .github/post-to-x.ps1). Skipped until the
-  # X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN and X_ACCESS_TOKEN_SECRET secrets exist.
-  x:
-    needs: release
-    if: needs.release.outputs.published == 'true'
-    runs-on: ubuntu-latest
-    env:
-      X_API_KEY: ${{ secrets.X_API_KEY }}
-      X_API_SECRET: ${{ secrets.X_API_SECRET }}
-      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-      X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
-    steps:
-      - if: env.X_API_KEY == ''
-        run: echo "::notice::X_API_KEY secret is not set; nothing posted on X."
-
-      - if: env.X_API_KEY != ''
-        uses: actions/checkout@v7
-
-      - if: env.X_API_KEY != ''
-        shell: pwsh
-        run: .github/post-to-x.ps1 -Version $env:GITHUB_REF_NAME
-
   # Opens a pull request on microsoft/winget-pkgs for the new version (see packaging/winget/README.md).
   # Skipped until the WINGET_TOKEN secret exists. A release made with github.token doesn't trigger
   # other workflows, so this runs here instead of on the "release" event.
