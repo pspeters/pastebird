@@ -1,9 +1,11 @@
 # Posts the CHANGELOG.md section of a version to X, with a campaign link to the changelog on the website.
 # Needs X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN and X_ACCESS_TOKEN_SECRET: an X app with Read and Write permissions,
-# and the access token of the account that posts. -DryRun only prints the post.
+# and the access token of the account that posts. -DryRun only prints the post; -Check also signs in to X
+# and shows the account and whether it may post, without posting.
 param(
     [Parameter(Mandatory)][string]$Version,
-    [switch]$DryRun
+    [switch]$DryRun,
+    [switch]$Check
 )
 $ErrorActionPreference = 'Stop'
 $Version = $Version.TrimStart('v')
@@ -61,23 +63,41 @@ $post = "$head`n`n" + ($lines -join "`n") + "`n`n$link"
 $post
 if ($DryRun) { return }
 
-# OAuth 1.0a (HMAC-SHA1). With a JSON body only the oauth_ parameters are signed.
-$url = 'https://api.x.com/2/tweets'
+# OAuth 1.0a (HMAC-SHA1). Neither request has query or form parameters, so only the oauth_ ones are signed.
 function Esc([string]$s) { [uri]::EscapeDataString($s) }
-$oauth = [ordered]@{
-    oauth_consumer_key = $env:X_API_KEY
-    oauth_nonce = [guid]::NewGuid().ToString('N')
-    oauth_signature_method = 'HMAC-SHA1'
-    oauth_timestamp = [string][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-    oauth_token = $env:X_ACCESS_TOKEN
-    oauth_version = '1.0'
+function Get-OAuthHeader([string]$method, [string]$url) {
+    foreach ($name in 'X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_TOKEN_SECRET') {
+        if (-not [Environment]::GetEnvironmentVariable($name)) { throw "$name is not set" }
+    }
+    $oauth = [ordered]@{
+        oauth_consumer_key = $env:X_API_KEY
+        oauth_nonce = [guid]::NewGuid().ToString('N')
+        oauth_signature_method = 'HMAC-SHA1'
+        oauth_timestamp = [string][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+        oauth_token = $env:X_ACCESS_TOKEN
+        oauth_version = '1.0'
+    }
+    $paramString = ($oauth.Keys | Sort-Object | ForEach-Object { "$(Esc $_)=$(Esc $oauth[$_])" }) -join '&'
+    $base = "$method&$(Esc $url)&$(Esc $paramString)"
+    $hmac = [System.Security.Cryptography.HMACSHA1]::new([Text.Encoding]::UTF8.GetBytes("$(Esc $env:X_API_SECRET)&$(Esc $env:X_ACCESS_TOKEN_SECRET)"))
+    $oauth.oauth_signature = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($base)))
+    'OAuth ' + (($oauth.Keys | Sort-Object | ForEach-Object { "$(Esc $_)=`"$(Esc $oauth[$_])`"" }) -join ', ')
 }
-$paramString = ($oauth.Keys | Sort-Object | ForEach-Object { "$(Esc $_)=$(Esc $oauth[$_])" }) -join '&'
-$base = "POST&$(Esc $url)&$(Esc $paramString)"
-$hmac = [System.Security.Cryptography.HMACSHA1]::new([Text.Encoding]::UTF8.GetBytes("$(Esc $env:X_API_SECRET)&$(Esc $env:X_ACCESS_TOKEN_SECRET)"))
-$oauth.oauth_signature = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($base)))
-$auth = 'OAuth ' + (($oauth.Keys | Sort-Object | ForEach-Object { "$(Esc $_)=`"$(Esc $oauth[$_])`"" }) -join ', ')
 
+if ($Check) {
+    # Signs in without posting: shows the account and whether the token may post (x-access-level).
+    $url = 'https://api.x.com/2/users/me'
+    $response = Invoke-WebRequest -Uri $url -Headers @{ Authorization = (Get-OAuthHeader 'GET' $url) }
+    $user = ($response.Content | ConvertFrom-Json).data
+    $level = "$($response.Headers['x-access-level'])"
+    "`nSigned in as @$($user.username) ($($user.name)), access level: $level"
+    if ($level -and $level -notmatch 'write') {
+        throw 'This access token may only read. Set the app to Read and write, then generate the Access Token and Secret again.'
+    }
+    return
+}
+
+$url = 'https://api.x.com/2/tweets'
 $body = [Text.Encoding]::UTF8.GetBytes((@{ text = $post } | ConvertTo-Json -Compress))
-$response = Invoke-RestMethod -Method Post -Uri $url -Headers @{ Authorization = $auth } -ContentType 'application/json; charset=utf-8' -Body $body
+$response = Invoke-RestMethod -Method Post -Uri $url -Headers @{ Authorization = (Get-OAuthHeader 'POST' $url) } -ContentType 'application/json; charset=utf-8' -Body $body
 "`nPosted: https://x.com/i/status/$($response.data.id)"
