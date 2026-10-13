@@ -389,6 +389,7 @@ final class PopupWindow: NSObject, NSWindowDelegate, NSTableViewDataSource, NSTa
         panel.appearance = appearance
         searchField.placeholderString = Loc.t("popup.search")
         searchField.stringValue = search
+        searchField.abortEditing() // no field editor, so no selection is drawn
         showPreview = preview
         computeAnchor(.centered)
         refresh(preferredIndex: index) // selects, updates the preview and lays out
@@ -534,8 +535,13 @@ final class PopupWindow: NSObject, NSWindowDelegate, NSTableViewDataSource, NSTa
             y += 16 + height + 18
         } else {
             // The preview pane takes its (fixed) height from the list, so a full popup keeps its size.
-            let rowsHeight = results.reduce(0) { $0 + ($1.thumbnail != nil ? Self.imageRowHeight : Self.textRowHeight) }
-            let listHeight = min(rowsHeight, Self.listMaxHeight - previewHeight)
+            // Whole rows only, so the list doesn't end in half a row when it opens.
+            var listHeight: CGFloat = 0
+            for item in results {
+                let row = item.thumbnail != nil ? Self.imageRowHeight : Self.textRowHeight
+                if listHeight + row > Self.listMaxHeight - previewHeight { break }
+                listHeight += row
+            }
             scrollView.frame = NSRect(x: 6, y: y + 5, width: width - 12, height: listHeight)
             tableView.tableColumns.first?.width = scrollView.contentSize.width
             y += 5 + listHeight + 6
