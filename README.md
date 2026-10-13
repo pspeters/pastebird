@@ -27,7 +27,7 @@ Pastebird runs quietly in the system tray (on a Mac: the menu bar) and remembers
 
 - No main window, no toolbar, no clutter.
 - Keyboard-first: everything works without a mouse.
-- Native Windows 11 look with acrylic, rounded corners and light/dark mode.
+- Native look: Windows 11 acrylic on Windows, the translucent macOS look on a Mac, rounded corners and light/dark mode.
 - 100% local: no account, no cloud, no telemetry. The only network requests are for updates: a daily check with GitHub, and the download of a new version.
 - Available in English and Dutch.
 
@@ -45,6 +45,21 @@ Install just one of them. See the [changelog](CHANGELOG.md) for what's new.
 ### Mac
 
 Get `Pastebird-<version>.dmg` from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page, open it and drag Pastebird to Applications.
+
+<p align="center"><img src="docs/screenshots/mac/pastebird-mac-1-history.jpg" alt="The Pastebird popup on a Mac with pinned items, a link, a file path, a screenshot and text" width="800"></p>
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/mac/pastebird-mac-2-search.jpg" alt="Typing proj finds the project files on a Mac"></td>
+    <td><img src="docs/screenshots/mac/pastebird-mac-3-preview.jpg" alt="Tab shows the whole item and when you copied it, on a Mac"></td>
+    <td><img src="docs/screenshots/mac/pastebird-mac-4-dark.jpg" alt="Pinned items in dark mode on a Mac"></td>
+  </tr>
+  <tr>
+    <td align="center">Fuzzy search</td>
+    <td align="center">Preview with <code>Tab</code></td>
+    <td align="center">Pinned items, dark mode</td>
+  </tr>
+</table>
 
 - Requires macOS 13 or later, on Apple silicon or Intel. Signed and notarized by Apple, so it opens without a warning.
 - Pastebird lives in the menu bar: click the bird to open the popup, right-click (or Control-click) for the menu with Settings.
