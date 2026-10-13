@@ -389,13 +389,14 @@ final class PopupWindow: NSObject, NSWindowDelegate, NSTableViewDataSource, NSTa
         panel.appearance = appearance
         searchField.placeholderString = Loc.t("popup.search")
         searchField.stringValue = search
-        searchField.abortEditing() // no field editor, so no selection is drawn
         showPreview = preview
         computeAnchor(.centered)
         refresh(preferredIndex: index) // selects, updates the preview and lays out
 
         panel.setFrameOrigin(NSPoint(x: -20000, y: -20000))
         panel.orderFrontRegardless()
+        // Shown, the window gives the search box focus, which selects its text; the screenshot shows it unselected.
+        panel.makeFirstResponder(nil)
         panel.contentView?.layoutSubtreeIfNeeded()
         tableView.scrollRowToVisible(0)
         panel.displayIfNeeded()
