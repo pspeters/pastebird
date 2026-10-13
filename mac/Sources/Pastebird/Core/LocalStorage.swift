@@ -18,9 +18,10 @@ final class LocalStorage {
     /// Nil when the Keychain refused the key; the history then stays in memory only, so nothing is overwritten.
     private let key: SymmetricKey?
 
-    init() {
+    /// Without `useKeychain` (the screenshot tool) nothing is read or written: the history stays in memory.
+    init(useKeychain: Bool = true) {
         Self.createFolder(Self.folder)
-        key = Self.loadOrCreateKey()
+        key = useKeychain ? Self.loadOrCreateKey() : nil
     }
 
     var settingsExist: Bool { FileManager.default.fileExists(atPath: Self.settingsURL.path) }

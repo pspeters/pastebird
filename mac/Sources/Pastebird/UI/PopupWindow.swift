@@ -381,6 +381,37 @@ final class PopupWindow: NSObject, NSWindowDelegate, NSTableViewDataSource, NSTa
         return nil
     }
 
+    // ---------------------------------------------------------------- screenshots (UI/Screenshots.swift)
+
+    /// Lays the popup out for this search, selection and preview, off-screen and without taking focus, and draws
+    /// its content at 2×: everything except the translucent backdrop, which the screenshot tool draws itself.
+    func snapshot(search: String, select index: Int, preview: Bool, appearance: NSAppearance) -> NSBitmapImageRep? {
+        panel.appearance = appearance
+        searchField.placeholderString = Loc.t("popup.search")
+        searchField.stringValue = search
+        showPreview = preview
+        computeAnchor(.centered)
+        refresh(preferredIndex: index) // selects, updates the preview and lays out
+
+        panel.setFrameOrigin(NSPoint(x: -20000, y: -20000))
+        panel.orderFrontRegardless()
+        panel.contentView?.layoutSubtreeIfNeeded()
+        tableView.scrollRowToVisible(0)
+        panel.displayIfNeeded()
+        defer { panel.orderOut(nil) }
+
+        let size = content.bounds.size
+        guard size.width > 0, size.height > 0,
+              let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width * 2), pixelsHigh: Int(size.height * 2),
+                                         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return nil }
+        rep.size = size
+        appearance.performAsCurrentDrawingAppearance {
+            content.cacheDisplay(in: content.bounds, to: rep)
+        }
+        return rep
+    }
+
     // ---------------------------------------------------------------- layout
 
     private func buildPanel() {

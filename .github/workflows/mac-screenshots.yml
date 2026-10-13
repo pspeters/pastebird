@@ -1,0 +1,47 @@
+# Renders the Mac screenshots (UI/Screenshots.swift: the real popup with sample data) in English and Dutch.
+# They are kept as a workflow artifact and published on the branch mac-screenshots, which holds only these images
+# and is replaced on every run. Runs by hand (Actions → this workflow → Run workflow) or when the renderer changes.
+name: macOS screenshots
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['**']
+    paths: ['mac/Sources/Pastebird/UI/Screenshots.swift', '.github/workflows/mac-screenshots.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build
+        run: swift build -c release --package-path mac
+
+      - name: Render
+        run: |
+          for lang in en nl; do
+            mac/.build/release/Pastebird --screenshots "screenshots/$lang" "$lang" --icon mac/Resources/AppIcon.iconset/icon_256x256@2x.png
+          done
+          ls -lR screenshots
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Pastebird-mac-screenshots
+          path: screenshots
+
+      - name: Publish on the mac-screenshots branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd screenshots
+          git init -q -b mac-screenshots
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Mac screenshots from ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" mac-screenshots
