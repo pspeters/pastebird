@@ -64,6 +64,7 @@ final class Loc: ObservableObject {
         "tray.settings": "Settings…",
         "tray.exit": "Quit Pastebird",
         "tray.update": "Update to Version {0}",
+        "tray.tooltip": "Pastebird · Click to open, right-click for the menu",
 
         "notify.running.title": "Pastebird is running in the menu bar",
         "notify.running.text": "Press {0} to open your clipboard history.",
@@ -169,6 +170,7 @@ final class Loc: ObservableObject {
         "tray.settings": "Instellingen…",
         "tray.exit": "Stop Pastebird",
         "tray.update": "Bijwerken naar versie {0}",
+        "tray.tooltip": "Pastebird · Klik om te openen, rechtsklik voor het menu",
 
         "notify.running.title": "Pastebird staat in de menubalk",
         "notify.running.text": "Druk op {0} om je klembordgeschiedenis te openen.",

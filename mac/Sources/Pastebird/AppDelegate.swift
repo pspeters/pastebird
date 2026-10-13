@@ -64,6 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         popup = PopupWindow(history: history, storage: storage)
         popup?.itemChosen = { [weak self] item, paste, keepFormatting in self?.onItemChosen(item, paste: paste, keepFormatting: keepFormatting) }
+        popup?.settingsRequested = { [weak self] in self?.showSettings() }
 
         hotkey = GlobalHotkeyService()
         hotkey?.pressed = { [weak self] in self?.onHotkeyPressed() }
@@ -246,6 +247,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         storage.saveSettings(settings)
         Loc.shared.apply(language)
         history.items.forEach { $0.resetCachedTexts() }
+        statusItem?.refreshTexts()
     }
 
     func setMaxItems(_ maxItems: Int) {

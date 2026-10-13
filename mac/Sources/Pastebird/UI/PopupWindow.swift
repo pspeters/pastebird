@@ -80,6 +80,9 @@ final class PopupWindow: NSObject, NSWindowDelegate, NSTableViewDataSource, NSTa
     /// of copied text should be kept (false with ⌘↩).
     var itemChosen: ((ClipItem, Bool, Bool) -> Void)?
 
+    /// Called on ⌘, in the popup.
+    var settingsRequested: (() -> Void)?
+
     /// True right after the popup closed; lets a click on the menu bar icon toggle it instead of reopening it.
     var wasJustHidden: Bool { Date().timeIntervalSince(hiddenAt) < 0.4 }
 
@@ -342,6 +345,10 @@ final class PopupWindow: NSObject, NSWindowDelegate, NSTableViewDataSource, NSTa
                 undo() // brings back removed items; without any, ⌘Z undoes typing in the search box
             case ("p", false):
                 if let item = selectedItem { togglePin(item) }
+            case (",", false):
+                // ⌘, opens Settings, as in every Mac app.
+                hide()
+                settingsRequested?()
             // Editing shortcuts for the search box, which an app without a menu bar doesn't get by itself.
             case ("a", false): send(#selector(NSText.selectAll(_:)))
             case ("c", false): send(#selector(NSText.copy(_:)))
