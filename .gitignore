@@ -4,3 +4,5 @@ publish/
 .vs/
 *.user
 packaging/signing.json
+.build/
+mac/build/

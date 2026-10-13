@@ -1,4 +1,4 @@
-A dead-simple, fast clipboard manager for Windows 11.
+A dead-simple, fast clipboard manager for Windows 11 and Mac.
 
 **Ctrl+C → later Ctrl+Shift+V → type → Enter → done.**
 
@@ -9,6 +9,8 @@ A dead-simple, fast clipboard manager for Windows 11.
 **Or the installer:** download `PastebirdSetup-<version>.exe` below and run it. Requires Windows 11; no admin rights or extra software needed. Windows may show "Windows protected your PC" because the installer isn't code-signed yet. Click **More info → Run anyway**.
 
 Install just one of them.
+
+**Mac:** download `Pastebird-<version>.dmg` below, open it and drag Pastebird to Applications. Requires macOS 13 or later (Apple silicon or Intel). The shortcut is ⇧⌘V.
 
 ## Support
 

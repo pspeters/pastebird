@@ -109,7 +109,58 @@ To regenerate the icon and Store assets:
 dotnet run --project tools/IconGen -- src/Pastebird/Assets packaging/msix/Assets
 ```
 
-Set `ICON_PREVIEW=docs\logo.png` first to refresh the logo shown at the top of the README.
+Set `ICON_PREVIEW=docs\logo.png` first to refresh the logo shown at the top of the README, and `MAC_ICONSET=mac\Resources\AppIcon.iconset` to refresh the macOS icon.
+
+## macOS
+
+The Mac version lives in `mac/`: Swift (AppKit for the popup, SwiftUI for Settings and What's new), with no dependencies. It runs on macOS 13 or later; building needs Xcode (the universal build uses Xcode's build system, which the command line tools alone don't have).
+
+```bash
+bash mac/build.sh
+```
+
+This creates, in `mac/build/`:
+
+- `Pastebird.app`, a universal app (Apple silicon and Intel);
+- `Pastebird-<version>.dmg` for users: open it and drag Pastebird to Applications;
+- `Pastebird-mac-<version>.zip`, which the built-in updater downloads.
+
+The version comes from `<Version>` in `Pastebird.csproj`, so Windows and Mac share version numbers and the changelog. During development, `swift run --package-path mac` starts it without an app bundle (no notifications, login item or updates then).
+
+Every push that touches `mac/` builds it on GitHub Actions (`.github/workflows/mac.yml`); the .dmg is attached to the run as an artifact. The release workflow builds it the same way and adds the .dmg and .zip to the release.
+
+**How it maps to Windows**
+
+| Windows | macOS |
+|---|---|
+| Tray icon and menu | Menu bar icon (click: popup, right-click: menu) |
+| `RegisterHotKey`, Ctrl+Shift+V | `RegisterEventHotKey`, ⇧⌘V |
+| Clipboard listener | Polls `NSPasteboard.changeCount` 4× per second (macOS has no clipboard event) |
+| `SendInput` Ctrl+V | `CGEvent` ⌘V; needs Privacy & Security → Accessibility |
+| Delete / Ctrl+Delete | ⌘⌫ (or ⌦) / ⇧⌘⌫ |
+| Windows OCR | Vision, always available |
+| DPAPI | AES-GCM with a key in the Keychain, data in `~/Library/Application Support/Pastebird` |
+| Run key | Login item (`SMAppService`) |
+| Inno Setup installer | The updater swaps `Pastebird.app` after Pastebird quits, then starts it |
+
+**Signing and notarization**
+
+Released builds are signed with a Developer ID certificate and notarized by Apple, so they open without a Gatekeeper warning. GitHub Actions does this when these repository secrets exist (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|---|---|
+| `MACOS_CERTIFICATE_P12` | The *Developer ID Application* certificate with its private key, exported as .p12, in base64 (`base64 -i Certificate.p12 \| pbcopy`) |
+| `MACOS_CERTIFICATE_PASSWORD` | The password you gave the .p12 |
+| `NOTARY_API_KEY` | The contents of the App Store Connect API key file (`AuthKey_XXXXXXXXXX.p8`) |
+| `NOTARY_KEY_ID` | That key's Key ID |
+| `NOTARY_ISSUER_ID` | The Issuer ID shown above the list of keys |
+
+1. **Certificate.** In Xcode: Settings → Accounts → your team → Manage Certificates → **+** → *Developer ID Application* (only the Account Holder can create one). Then in Keychain Access → My Certificates, right-click *Developer ID Application: …* → Export, as .p12 with a password.
+2. **API key.** In [App Store Connect](https://appstoreconnect.apple.com/access/integrations/api): Users and Access → Integrations → App Store Connect API → Team Keys → **+**, access *Developer*. Download the .p8 file (that's only possible once) and note the Key ID and Issuer ID.
+
+Locally, the same works with `SIGN_IDENTITY="Developer ID Application: Name (TEAMID)"`, `NOTARY_KEY=/path/to/AuthKey_….p8`, `NOTARY_KEY_ID` and `NOTARY_ISSUER` set before `bash mac/build.sh`.
+
+Without these, the app is signed ad hoc and Gatekeeper blocks the first start of a downloaded copy: the user opens it once through System Settings → Privacy & Security → **Open Anyway**. The ad-hoc signature's designated requirement only names the bundle identifier, so a switch to the Developer ID signature keeps the Accessibility permission and Keychain access of existing installs.
 
 ## Design and structure
 

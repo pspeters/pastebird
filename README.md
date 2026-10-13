@@ -2,13 +2,13 @@
 
 # Pastebird
 
-A dead-simple, fast clipboard manager for Windows 11.
+A dead-simple, fast clipboard manager for Windows 11 and Mac.
 
-**Ctrl+C → later Ctrl+Shift+V → type → Enter → done.**
+**Ctrl+C → later Ctrl+Shift+V → type → Enter → done.** (On a Mac: ⌘C → ⇧⌘V.)
 
 <p><a href="https://apps.microsoft.com/detail/9NS7S1NGXWTG"><img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" alt="Get it from Microsoft"></a></p>
 
-Pastebird runs quietly in the system tray and remembers what you copy: text (with its formatting), URLs, file paths, copied files and images. One shortcut opens a small popup where you search and paste.
+Pastebird runs quietly in the system tray (on a Mac: the menu bar) and remembers what you copy: text (with its formatting), URLs, file paths, copied files and images. One shortcut opens a small popup where you search and paste.
 
 <p align="center"><img src="docs/screenshots/pastebird-1-history.png" alt="The Pastebird popup with pinned items, a link, a file path, a screenshot and text" width="800"></p>
 
@@ -41,6 +41,17 @@ Install just one of them. See the [changelog](CHANGELOG.md) for what's new.
 - Requires Windows 11. No admin rights and no extra software needed.
 - Pastebird starts right after installation and lives in the system tray (bottom right, next to the clock).
 - Uninstall through Settings → Apps. This also removes your stored history.
+
+### Mac
+
+Get `Pastebird-<version>.dmg` from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page, open it and drag Pastebird to Applications.
+
+- Requires macOS 13 or later, on Apple silicon or Intel. Signed and notarized by Apple, so it opens without a warning.
+- Pastebird lives in the menu bar: click the bird to open the popup, right-click (or Control-click) for the menu with Settings.
+- The shortcuts are the same with ⌘ instead of Ctrl: **⇧⌘V** opens Pastebird, **⌘↩** pastes plain text, **⌘1…9**, **⌘P** and **⌘Z** work as on Windows. **⌘⌫** removes an item and **⇧⌘⌫** clears the history. **⌘,** opens Settings.
+- To paste straight into the app you were in, allow Pastebird once in System Settings → Privacy & Security → Accessibility. Without it, the item is still on the clipboard: press ⌘V.
+- Text recognition in screenshots is built into macOS; nothing to install.
+- To uninstall, quit Pastebird from its menu and drag it from Applications to the Trash.
 
 ## Usage
 
@@ -95,9 +106,9 @@ You can turn the check off in Settings. The Microsoft Store version is updated b
 
 ## Privacy
 
-- Everything stays in `%LOCALAPPDATA%\Pastebird` on your pc: no accounts, telemetry or cloud.
-- The only network requests are for updates: once a day Pastebird asks GitHub for the latest release, and when you choose to update, it downloads the installer through `pastebird.app/update.php`. That page counts that an update happened (only the old and new version number, no IP address) and forwards to the installer on GitHub; Pastebird checks the file against the SHA-256 that GitHub publishes, and downloads straight from GitHub if pastebird.app can't be reached. Nothing about you or your clipboard is sent. GitHub and pastebird.app see your IP address, as with any website. You can turn the check off in Settings.
-- Your history, including images and formatting, is encrypted for your Windows user account. Other accounts and other pcs can't read it.
+- Everything stays in `%LOCALAPPDATA%\Pastebird` on your pc (on a Mac: `~/Library/Application Support/Pastebird`): no accounts, telemetry or cloud.
+- The only network requests are for updates: once a day Pastebird asks GitHub for the latest release, and when you choose to update, it downloads the new version through `pastebird.app/update.php`. That page counts that an update happened (only the old and new version number, no IP address) and forwards to the download on GitHub; Pastebird checks the file against the SHA-256 that GitHub publishes, and downloads straight from GitHub if pastebird.app can't be reached. Nothing about you or your clipboard is sent. GitHub and pastebird.app see your IP address, as with any website. You can turn the check off in Settings.
+- Your history, including images and formatting, is encrypted for your Windows user account (on a Mac: with a key in your Keychain). Other accounts and other computers can't read it.
 - Content that password managers mark as private is never stored.
 - Very large items (over 200,000 characters) are skipped, and the history size is capped.
 

@@ -63,6 +63,30 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "published=true" >> $env:GITHUB_OUTPUT
 
+  # Adds the macOS app to the release that the Windows job just published. A separate job, so a problem with the
+  # Mac build never holds up the Windows release; the Mac updater only offers a version once its zip is there.
+  # The build itself (signed and notarized when the secrets exist) is in mac.yml.
+  mac-build:
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    uses: ./.github/workflows/mac.yml
+    secrets: inherit
+
+  mac:
+    needs: mac-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Pastebird-mac
+
+      - name: Add to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release upload "$GITHUB_REF_NAME" "Pastebird-$version.dmg" "Pastebird-mac-$version.zip" --repo "$GITHUB_REPOSITORY"
+
   # Opens a pull request on microsoft/winget-pkgs for the new version (see packaging/winget/README.md).
   # Skipped until the WINGET_TOKEN secret exists. A release made with github.token doesn't trigger
   # other workflows, so this runs here instead of on the "release" event.
