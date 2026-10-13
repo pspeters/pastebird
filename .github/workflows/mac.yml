@@ -1,0 +1,28 @@
+# Builds the macOS app on every change to it, so a build error shows up right away.
+# The .dmg is kept as a workflow artifact for testing (Actions → this run → Artifacts).
+name: macOS build
+
+on:
+  push:
+    paths: ['mac/**', 'CHANGELOG.md', '.github/workflows/mac.yml']
+  pull_request:
+    paths: ['mac/**', '.github/workflows/mac.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build
+        run: bash mac/build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Pastebird-mac
+          path: mac/build/Pastebird-*.dmg
+          retention-days: 14

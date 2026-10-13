@@ -36,6 +36,23 @@ if (args.Length > 1)
     Console.WriteLine($"Wrote MSIX assets to {msixDir}");
 }
 
+// Optional: macOS iconset (mac/build.sh turns it into AppIcon.icns with iconutil). macOS icons keep a margin around
+// the tile: it covers about 80% of the canvas, so the 28/32 tile is drawn at 92% of the canvas.
+if (Environment.GetEnvironmentVariable("MAC_ICONSET") is { } iconset)
+{
+    Directory.CreateDirectory(iconset);
+    foreach (var size in new[] { 16, 32, 128, 256, 512 })
+    {
+        foreach (var scale in new[] { 1, 2 })
+        {
+            int canvas = size * scale;
+            var name = scale == 1 ? $"icon_{size}x{size}.png" : $"icon_{size}x{size}@2x.png";
+            File.WriteAllBytes(Path.Combine(iconset, name), EncodePng(Render((int)Math.Round(canvas * 0.92), canvas)));
+        }
+    }
+    Console.WriteLine($"Wrote macOS iconset to {Path.GetFullPath(iconset)}");
+}
+
 /// <summary>Renders the icon at <paramref name="size"/> px, centered on an optional larger transparent canvas.</summary>
 static BitmapSource Render(int size, int canvas = 0)
 {
