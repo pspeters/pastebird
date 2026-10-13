@@ -1,13 +1,13 @@
 # Renders the Mac screenshots (UI/Screenshots.swift: the real popup with sample data) in English and Dutch.
 # They are kept as a workflow artifact and published on the branch mac-screenshots, which holds only these images
-# and is replaced on every run. Runs by hand (Actions → this workflow → Run workflow) or when the renderer changes.
+# and is replaced on every run. Runs by hand (Actions → this workflow → Run workflow) or when the popup or the renderer changes.
 name: macOS screenshots
 
 on:
   workflow_dispatch:
   push:
     branches: ['**']
-    paths: ['mac/Sources/Pastebird/UI/Screenshots.swift', '.github/workflows/mac-screenshots.yml']
+    paths: ['mac/Sources/Pastebird/UI/Screenshots.swift', 'mac/Sources/Pastebird/UI/PopupWindow.swift', '.github/workflows/mac-screenshots.yml']
 
 permissions:
   contents: write
