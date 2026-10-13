@@ -88,11 +88,13 @@ private struct Renderer {
         let muted = dark ? rgb(0xA9, 0xB6, 0xCC) : rgb(0x47, 0x55, 0x69)
         let captionWidth: CGFloat = 330
         // Every line of the title on one line: a smaller font for a long word ("toetsaanslagen").
+        let titleLines = title.components(separatedBy: "\n")
+        func titleFits(_ size: CGFloat) -> Bool {
+            let font = NSFont.systemFont(ofSize: size, weight: .bold)
+            return titleLines.allSatisfy { NSAttributedString(string: $0, attributes: [.font: font]).size().width <= captionWidth }
+        }
         var titleSize: CGFloat = 38
-        while titleSize > 28, title.components(separatedBy: "
-").contains(where: {
-            NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: titleSize, weight: .bold)]).size().width > captionWidth
-        }) { titleSize -= 1 }
+        while titleSize > 28 && !titleFits(titleSize) { titleSize -= 1 }
         let titleText = styled(title, font: .systemFont(ofSize: titleSize, weight: .bold), lineHeight: titleSize + 6, color: ink)
         let bodyText = styled(text, font: .systemFont(ofSize: 16), lineHeight: 24, color: muted)
         let titleHeight = ceil(titleText.boundingRect(with: NSSize(width: captionWidth, height: .greatestFiniteMagnitude), options: .usesLineFragmentOrigin).height)
