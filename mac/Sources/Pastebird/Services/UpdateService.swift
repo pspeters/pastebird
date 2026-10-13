@@ -10,7 +10,9 @@ struct UpdateInfo {
 
 /// Checks GitHub for a newer release (shortly after start, then daily) and installs it on request:
 /// downloads Pastebird-mac-<version>.zip, verifies size and SHA-256 from GitHub, swaps the app bundle
-/// once Pastebird has quit, and starts the new version. Nothing about the user is sent.
+/// once Pastebird has quit, and starts the new version. The zip is downloaded through pastebird.app/update.php,
+/// which counts the update (only the old and the new version number) and forwards to GitHub. Nothing else about the
+/// user is sent.
 final class UpdateService {
     private static let firstCheckDelay: TimeInterval = 60
     private static let checkInterval: TimeInterval = 24 * 60 * 60
@@ -18,7 +20,8 @@ final class UpdateService {
     private let session: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForResource = 5 * 60
-        config.httpAdditionalHeaders = ["User-Agent": "Pastebird-mac/\(AppInfo.version)"]
+        // "Pastebird/<version>" is what pastebird.app/update.php counts; "(Mac)" tells the two apps apart.
+        config.httpAdditionalHeaders = ["User-Agent": "Pastebird/\(AppInfo.version) (Mac)"]
         return URLSession(configuration: config)
     }()
     private var timer: Timer?
@@ -114,16 +117,33 @@ final class UpdateService {
             try? FileManager.default.removeItem(at: folder)
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
 
-            let (downloaded, _) = try await session.download(from: update.downloadUrl)
-            let zip = folder.appendingPathComponent("Pastebird.zip")
-            try FileManager.default.moveItem(at: downloaded, to: zip)
-
-            let bytes = try Data(contentsOf: zip, options: .mappedIfSafe)
-            let hash = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
-            guard bytes.count == update.size, update.sha256 == nil || hash == update.sha256!.lowercased() else {
-                LocalStorage.log("Downloaded update \(update.version) failed verification.")
-                return false
+            // First through pastebird.app, which counts the update (only the two version numbers) and forwards to the
+            // same zip on GitHub; only when GitHub published its SHA-256, so the file is always checked against GitHub,
+            // whatever the website sends. If that fails, straight from GitHub.
+            var sources: [URL] = []
+            if update.sha256 != nil,
+               let counted = URL(string: "\(AppInfo.updateDownloadUrl)?to=\(update.version)&from=\(AppVersion.current)&os=mac") {
+                sources.append(counted)
             }
+            sources.append(update.downloadUrl)
+
+            let zip = folder.appendingPathComponent("Pastebird.zip")
+            var verified = false
+            for source in sources where !verified {
+                do {
+                    let (downloaded, _) = try await session.download(from: source)
+                    try? FileManager.default.removeItem(at: zip)
+                    try FileManager.default.moveItem(at: downloaded, to: zip)
+                } catch {
+                    LocalStorage.log(error)
+                    continue
+                }
+                let bytes = try Data(contentsOf: zip, options: .mappedIfSafe)
+                let hash = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+                verified = bytes.count == update.size && (update.sha256 == nil || hash == update.sha256!.lowercased())
+                if !verified { LocalStorage.log("Downloaded update \(update.version) from \(source) failed verification.") }
+            }
+            guard verified else { return false }
 
             let unpacked = folder.appendingPathComponent("unpacked", isDirectory: true)
             try run("/usr/bin/ditto", ["-x", "-k", zip.path, unpacked.path])

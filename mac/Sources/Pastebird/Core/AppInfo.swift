@@ -7,6 +7,9 @@ enum AppInfo {
     static let releasesUrl = gitHubUrl + "/releases/latest"
     static let changelogUrl = "https://pastebird.app/changelog.php"
     static let latestReleaseApiUrl = "https://api.github.com/repos/pspeters/pastebird/releases/latest"
+    /// The updater downloads a new version through here: the website counts that an update happened (only the two
+    /// version numbers) and forwards to the zip on GitHub, so its statistics can tell updates from new downloads.
+    static let updateDownloadUrl = "https://pastebird.app/update.php"
 
     static let bundleIdentifier = Bundle.main.bundleIdentifier ?? "app.pastebird.Pastebird"
 

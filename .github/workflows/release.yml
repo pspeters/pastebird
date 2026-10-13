@@ -65,11 +65,10 @@ jobs:
 
   # Adds the macOS app to the release that the Windows job just published. A separate job, so a problem with the
   # Mac build never holds up the Windows release; the Mac updater only offers a version once its zip is there.
-  # Skipped until the repository variable MAC_RELEASE is set to true (Settings → Secrets and variables → Actions).
   # The build itself (signed and notarized when the secrets exist) is in mac.yml.
   mac-build:
     needs: release
-    if: needs.release.outputs.published == 'true' && vars.MAC_RELEASE == 'true'
+    if: needs.release.outputs.published == 'true'
     uses: ./.github/workflows/mac.yml
     secrets: inherit
 

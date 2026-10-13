@@ -127,7 +127,7 @@ This creates, in `mac/build/`:
 
 The version comes from `<Version>` in `Pastebird.csproj`, so Windows and Mac share version numbers and the changelog. During development, `swift run --package-path mac` starts it without an app bundle (no notifications, login item or updates then).
 
-Every push that touches `mac/` builds it on GitHub Actions (`.github/workflows/mac.yml`); the .dmg is attached to the run as an artifact. The release workflow adds the .dmg and .zip to a release once the repository variable `MAC_RELEASE` is `true`.
+Every push that touches `mac/` builds it on GitHub Actions (`.github/workflows/mac.yml`); the .dmg is attached to the run as an artifact. The release workflow builds it the same way and adds the .dmg and .zip to the release.
 
 **How it maps to Windows**
 

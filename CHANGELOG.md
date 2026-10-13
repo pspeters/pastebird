@@ -14,6 +14,11 @@ The release workflow copies this section into the GitHub release and stops when 
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
 
+## [1.8.0] - 2026-10-13
+
+### Added
+- **Pastebird for Mac.** The same clipboard history, search, pins, preview and text recognition, on macOS 13 or later (Apple silicon and Intel). It lives in the menu bar: press **⇧⌘V**, type and press Return. On a Mac, ⌘ takes the place of Ctrl. Download the .dmg from the release or from pastebird.app.
+
 ## [1.7.2] - 2026-10-09
 
 ### Changed
