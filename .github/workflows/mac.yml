@@ -43,13 +43,24 @@ jobs:
           security create-keychain -p "$keychain_password" "$keychain"
           security set-keychain-settings -lut 21600 "$keychain"
           security unlock-keychain -p "$keychain_password" "$keychain"
-          security import "$RUNNER_TEMP/certificate.p12" -P "$MACOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          # The certificate and its private key (the .p12 holds both).
+          security import "$RUNNER_TEMP/certificate.p12" -P "$MACOS_CERTIFICATE_PASSWORD" -f pkcs12 -A -k "$keychain"
+          rm "$RUNNER_TEMP/certificate.p12"
+          # Apple's intermediate certificates, so the chain to Apple's root is complete (newer certificates use G2).
+          for ca in DeveloperIDG2CA DeveloperIDCA; do
+            curl -fsSL "https://www.apple.com/certificateauthority/$ca.cer" -o "$RUNNER_TEMP/$ca.cer"
+            security import "$RUNNER_TEMP/$ca.cer" -k "$keychain" || true
+          done
           security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" >/dev/null
           security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
-          rm "$RUNNER_TEMP/certificate.p12"
 
           identity="$(security find-identity -v -p codesigning "$keychain" | sed -n 's/.*"\(Developer ID Application: .*\)"/\1/p' | head -1)"
-          if [ -z "$identity" ]; then echo "::error::No 'Developer ID Application' certificate in MACOS_CERTIFICATE_P12"; exit 1; fi
+          if [ -z "$identity" ]; then
+            echo "Signing identities in the imported certificate:"
+            security find-identity -p codesigning "$keychain"
+            echo "::error::No valid 'Developer ID Application' certificate with its private key in MACOS_CERTIFICATE_P12"
+            exit 1
+          fi
           echo "SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
 
       - name: Prepare notarization key
