@@ -3,16 +3,24 @@
 What's new in each version of Pastebird. The newest version is at the top.
 
 <!--
-For every release, add a section at the top in this format before you push the tag:
+For every release, add a section at the top in this format before you run release.ps1:
 
 ## [x.y.z] - YYYY-MM-DD
 
 ### Added / ### Changed / ### Fixed / ### Removed
 - One line per change, written for users.
 
-The release workflow copies this section into the GitHub release and stops when it is missing.
+release.ps1 copies this section into the GitHub release and stops when it is missing.
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
+
+## [1.8.1] - 2026-10-14
+
+### Changed
+- The Windows installer, the app and its uninstaller are now code-signed. Windows shows "Open Source Developer Patrick Speters" as the publisher instead of "Unknown publisher".
+
+### Fixed
+- Mac: the popup no longer shows a partly cut-off row at the bottom.
 
 ## [1.8.0] - 2026-10-13
 
