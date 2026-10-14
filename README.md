@@ -34,7 +34,7 @@ Pastebird runs quietly in the system tray (on a Mac: the menu bar) and remembers
 ## Download
 
 - **Microsoft Store (recommended):** [get Pastebird from the Microsoft Store](https://apps.microsoft.com/detail/9NS7S1NGXWTG). It installs without a Windows warning and the Store keeps it up to date.
-- **Or the installer:** get the latest `PastebirdSetup-<version>.exe` from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page and run it. Windows may show "Windows protected your PC" because the installer isn't code-signed yet: click **More info → Run anyway**.
+- **Or the installer:** get the latest `PastebirdSetup-<version>.exe` from the [Releases](https://github.com/pspeters/pastebird/releases/latest) page and run it. The installer is code-signed, but while the certificate is new Windows may still show "Windows protected your PC": click **More info → Run anyway**.
 
 Install just one of them. See the [changelog](CHANGELOG.md) for what's new.
 

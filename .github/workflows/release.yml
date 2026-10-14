@@ -1,74 +1,19 @@
-# Builds the installer on Windows and publishes it as a GitHub release when a version tag (v1.2.3) is pushed.
-# The tag must match <Version> in Pastebird.csproj, and CHANGELOG.md needs a section for that version.
+# Finishes a release that release.ps1 published: adds the macOS app and submits the new version to winget.
+# The Windows installer is built and signed locally by release.ps1, because the signing key is in Certum
+# SimplySign, which GitHub Actions can't use. A release created with your own gh login triggers this workflow.
 name: Release
 
 on:
-  push:
-    tags: ['v*']
+  release:
+    types: [published]
 
 permissions:
   contents: write
 
 jobs:
-  release:
-    runs-on: windows-latest
-    outputs:
-      published: ${{ steps.publish.outputs.published }}
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Install Inno Setup
-        run: choco install innosetup --no-progress -y
-
-      - name: Check version
-        shell: pwsh
-        run: |
-          $version = ([xml](Get-Content src\Pastebird\Pastebird.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
-          if ("v$version" -ne $env:GITHUB_REF_NAME) { throw "Tag $env:GITHUB_REF_NAME does not match <Version>$version</Version> in Pastebird.csproj" }
-          "VERSION=$version" >> $env:GITHUB_ENV
-
-      - name: Release notes from CHANGELOG.md
-        shell: pwsh
-        run: |
-          # The section "## [<version>] - <date>" up to the next "## [" heading.
-          $text = Get-Content CHANGELOG.md -Raw
-          $pattern = '(?ms)^## \[' + [regex]::Escape($env:VERSION) + '\][^\n]*\n(.*?)(?=^## \[|\z)'
-          $match = [regex]::Match($text, $pattern)
-          if (-not $match.Success -or -not $match.Groups[1].Value.Trim()) { throw "CHANGELOG.md has no section for $env:VERSION. Add '## [$env:VERSION] - <date>' with the changes." }
-          $notes = $match.Groups[1].Value.Trim() + "`n`n---`n`n" + (Get-Content .github\release-notes.md -Raw)
-          Set-Content -Path release-notes.generated.md -Value $notes -Encoding utf8NoBOM
-
-      - name: Build installer
-        shell: pwsh
-        run: installer\build-installer.ps1 -Unsigned
-
-      # Pushing an existing tag again (for example after rewriting history) keeps the release that is already there.
-      - name: Publish release
-        id: publish
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release view $env:GITHUB_REF_NAME *> $null
-          if ($LASTEXITCODE -eq 0) {
-            "::notice::Release $env:GITHUB_REF_NAME already exists; left it as it is."
-            "published=false" >> $env:GITHUB_OUTPUT
-            exit 0
-          }
-          gh release create $env:GITHUB_REF_NAME "publish\PastebirdSetup-$env:VERSION.exe" --title "Pastebird $env:VERSION" --notes-file release-notes.generated.md
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          "published=true" >> $env:GITHUB_OUTPUT
-
-  # Adds the macOS app to the release that the Windows job just published. A separate job, so a problem with the
-  # Mac build never holds up the Windows release; the Mac updater only offers a version once its zip is there.
-  # The build itself (signed and notarized when the secrets exist) is in mac.yml.
+  # A separate job, so a problem with the Mac build never holds up the Windows release; the Mac updater only
+  # offers a version once its zip is there. The build itself (signed and notarized when the secrets exist) is in mac.yml.
   mac-build:
-    needs: release
-    if: needs.release.outputs.published == 'true'
     uses: ./.github/workflows/mac.yml
     secrets: inherit
 
@@ -88,11 +33,8 @@ jobs:
           gh release upload "$GITHUB_REF_NAME" "Pastebird-$version.dmg" "Pastebird-mac-$version.zip" --repo "$GITHUB_REPOSITORY"
 
   # Opens a pull request on microsoft/winget-pkgs for the new version (see packaging/winget/README.md).
-  # Skipped until the WINGET_TOKEN secret exists. A release made with github.token doesn't trigger
-  # other workflows, so this runs here instead of on the "release" event.
+  # Skipped until the WINGET_TOKEN secret exists.
   winget:
-    needs: release
-    if: needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
     env:
       WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
