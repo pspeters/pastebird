@@ -35,6 +35,8 @@
     <Resource Include="Assets\pastebird.ico" />
     <!-- Shown in "What's new" after an update (Core/Changelog.cs). -->
     <EmbeddedResource Include="..\..\CHANGELOG.md" LogicalName="CHANGELOG.md" />
+    <!-- UI languages, one file per language (Core/Localization.cs, docs/TRANSLATING.md). -->
+    <EmbeddedResource Include="Languages\*.json" LogicalName="Languages.%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

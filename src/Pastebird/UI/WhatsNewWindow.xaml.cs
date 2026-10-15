@@ -25,7 +25,7 @@ public partial class WhatsNewWindow : Window
         if (releases.Count == 0)
             Releases.Children.Add(new TextBlock { Text = Loc.T("whatsnew.empty"), TextWrapping = TextWrapping.Wrap });
 
-        AllChangesButton.Click += (_, _) => App.OpenUrl($"{AppInfo.ChangelogUrl}?lang={Loc.T("whatsnew.culture")[..2]}");
+        AllChangesButton.Click += (_, _) => App.OpenUrl($"{AppInfo.ChangelogUrl}?lang={Loc.Culture.TwoLetterISOLanguageName}");
         CloseButton.Click += (_, _) => Close();
     }
 
@@ -82,7 +82,6 @@ public partial class WhatsNewWindow : Window
     {
         if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
             return null;
-        var culture = CultureInfo.GetCultureInfo(Loc.T("whatsnew.culture"));
-        return parsed.ToString("d MMMM yyyy", culture);
+        return parsed.ToString("d MMMM yyyy", Loc.Culture);
     }
 }

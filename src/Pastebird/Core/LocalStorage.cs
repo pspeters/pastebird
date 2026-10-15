@@ -158,7 +158,9 @@ public sealed class LocalStorage
     }
 }
 
-[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
+[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true,
+    ReadCommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true)]
 [JsonSerializable(typeof(List<ClipItem>))]
 [JsonSerializable(typeof(AppSettings))]
+[JsonSerializable(typeof(Dictionary<string, string>))] // language files
 internal partial class PastebirdJson : JsonSerializerContext;

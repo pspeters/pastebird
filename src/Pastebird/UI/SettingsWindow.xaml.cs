@@ -64,7 +64,7 @@ public partial class SettingsWindow : Window
         LanguageBox.SelectionChanged += (_, _) =>
         {
             if (!_updatingLists && LanguageBox.SelectedIndex >= 0)
-                _app.SetLanguage((AppLanguage)LanguageBox.SelectedIndex);
+                _app.SetLanguage(LanguageBox.SelectedIndex == 0 ? null : Loc.Languages[LanguageBox.SelectedIndex - 1].Code);
         };
         ClearButton.Click += (_, _) => _app.ClearHistory(confirmOwner: this);
         WhatsNewButton.Click += (_, _) => _app.ShowWhatsNew();
@@ -111,8 +111,9 @@ public partial class SettingsWindow : Window
         KeepDaysBox.ItemsSource = AppSettings.KeepDayChoices
             .Select(d => d == 0 ? Loc.T("settings.keep.always") : Loc.T(d == 1 ? "settings.keep.day" : "settings.keep.days", d)).ToList();
         KeepDaysBox.SelectedIndex = Array.IndexOf(AppSettings.KeepDayChoices, _app.Settings.KeepDays);
-        LanguageBox.ItemsSource = new[] { Loc.T("settings.language.system"), "English", "Nederlands" };
-        LanguageBox.SelectedIndex = (int)_app.Settings.Language;
+        LanguageBox.ItemsSource = Loc.Languages.Select(l => l.Name).Prepend(Loc.T("settings.language.system")).ToList();
+        int language = Loc.Languages.ToList().FindIndex(l => l.Code.Equals(_app.Settings.Language, StringComparison.OrdinalIgnoreCase));
+        LanguageBox.SelectedIndex = language + 1; // 0 = system default, also for a language that is gone
         _updatingLists = false;
     }
 

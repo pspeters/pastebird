@@ -20,7 +20,9 @@ public sealed class AppSettings
 
     /// <summary>Unpinned items older than this many days are removed; 0 never removes them by age.</summary>
     public int KeepDays { get; set; }
-    public AppLanguage Language { get; set; } = AppLanguage.System;
+
+    /// <summary>Code of the UI language ("en", "nl", …); null follows the Windows display language.</summary>
+    public string? Language { get; set; }
     public int HotkeyModifiers { get; set; } = Hotkey.Default.Modifiers;
     public int HotkeyKey { get; set; } = Hotkey.Default.VirtualKey;
 
@@ -36,7 +38,8 @@ public sealed class AppSettings
         if (!HistorySizes.Contains(MaxItems)) MaxItems = 200;
         if (!KeepDayChoices.Contains(KeepDays)) KeepDays = 0;
         if (!Hotkey.IsValid) Hotkey = Hotkey.Default;
-        if (!Enum.IsDefined(Language)) Language = AppLanguage.System;
+        // Older versions stored an enum: System, English or Dutch.
+        Language = Language switch { "English" => "en", "Dutch" => "nl", "System" or "" => null, _ => Language };
         return this;
     }
 }

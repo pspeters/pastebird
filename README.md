@@ -29,7 +29,7 @@ Pastebird runs quietly in the system tray (on a Mac: the menu bar) and remembers
 - Keyboard-first: everything works without a mouse.
 - Native look: Windows 11 acrylic on Windows, the translucent macOS look on a Mac, rounded corners and light/dark mode.
 - 100% local: no account, no cloud, no telemetry. The only network requests are for updates: a daily check with GitHub, and the download of a new version.
-- Available in English and Dutch.
+- Available in English and Dutch. [Help translate Pastebird into your language.](docs/TRANSLATING.md)
 
 ## Download
 
@@ -105,7 +105,7 @@ Pastebird works out of the box, so you shouldn't need Settings. They cover:
 - **Shortcut** (default `Ctrl + Shift + V`)
 - **History size**: 50, 100, 200 or 500 items (default 200)
 - **Remove old items**: never (default), or after 1, 7 or 30 days. Pinned items stay.
-- **Language**: system default, English or Dutch
+- **Language**: system default, English or Dutch ([help translate](docs/TRANSLATING.md))
 - **Clear history**
 
 ## Updates

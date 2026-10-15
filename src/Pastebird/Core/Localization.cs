@@ -1,19 +1,28 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
+using System.Text.Json;
 
 namespace Pastebird.Core;
 
-public enum AppLanguage { System, English, Dutch }
+/// <summary>A UI language: its code (the file name, e.g. "nl" or "pt-BR") and its name in that language.</summary>
+public sealed record UiLanguage(string Code, string Name);
 
 /// <summary>
-/// UI strings in English and Dutch. XAML binds to the indexer (<c>{Binding [key], Source={x:Static core:Loc.Instance}}</c>),
-/// so switching language updates open windows immediately. Code uses <see cref="T(string)"/>.
+/// UI strings, one JSON file per language in Languages\ (see docs/TRANSLATING.md). XAML binds to the indexer
+/// (<c>{Binding [key], Source={x:Static core:Loc.Instance}}</c>), so switching language updates open windows
+/// immediately. Code uses <see cref="T(string)"/>. Missing strings fall back to English.
 /// </summary>
 public sealed class Loc : INotifyPropertyChanged
 {
+    private const string FallbackCode = "en";
+
+    private static readonly Dictionary<string, Dictionary<string, string>> Packs = LoadPacks();
+    private static readonly Dictionary<string, string> English = Packs[FallbackCode];
+
     private Dictionary<string, string> _strings = English;
 
-    // Lazy, so the static dictionaries below are initialized before the instance reads them.
+    // Lazy, so the static fields above are initialized before the instance reads them.
     public static Loc Instance => _instance ??= new Loc();
     private static Loc? _instance;
 
@@ -25,217 +34,104 @@ public sealed class Loc : INotifyPropertyChanged
 
     public static string T(string key, params object[] args) => string.Format(Instance[key], args);
 
+    /// <summary>All languages Pastebird can show, sorted by name.</summary>
+    public static IReadOnlyList<UiLanguage> Languages { get; } = Packs
+        .Select(p => new UiLanguage(p.Key, p.Value.GetValueOrDefault("language.name", p.Key)))
+        .OrderBy(l => l.Name, StringComparer.CurrentCultureIgnoreCase)
+        .ToList();
+
     /// <summary>Culture for dates in the UI: the system's when it matches the UI language, otherwise a default for that language.</summary>
     public static CultureInfo Culture { get; private set; } = CultureInfo.CurrentCulture;
 
-    public static void Apply(AppLanguage language)
+    /// <summary>Switches to the language with this code; null (or a language that isn't there) follows Windows.</summary>
+    public static void Apply(string? language)
     {
-        bool dutch = language == AppLanguage.Dutch
-            || (language == AppLanguage.System && CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "nl");
-        Instance._strings = dutch ? Dutch : English;
-        Culture = CultureInfo.CurrentCulture.TwoLetterISOLanguageName == (dutch ? "nl" : "en")
+        var code = Resolve(language);
+        Instance._strings = Packs[code];
+
+        var specific = CultureInfo.CreateSpecificCulture(code);
+        Culture = CultureInfo.CurrentCulture.TwoLetterISOLanguageName == specific.TwoLetterISOLanguageName
             ? CultureInfo.CurrentCulture
-            : CultureInfo.GetCultureInfo(dutch ? "nl-NL" : "en-US");
+            : specific;
         Instance.PropertyChanged?.Invoke(Instance, new PropertyChangedEventArgs("Item[]"));
     }
 
-    private static readonly Dictionary<string, string> English = new()
+    private static string Resolve(string? language)
     {
-        ["popup.search"] = "Search clipboard…",
-        ["popup.empty"] = "Nothing copied yet. Everything you copy with Ctrl+C shows up here.",
-        ["popup.noResults"] = "No results",
-        ["popup.pin.tooltip"] = "Pin or unpin (Ctrl+P)",
-        ["popup.remove.tooltip"] = "Remove (Delete)",
-        ["popup.undo"] = "Removed · Ctrl+Z to undo",
-        ["popup.preview.more"] = "\n… and {0:N0} more characters",
-        ["popup.copied.now"] = "Copied just now",
-        ["popup.copied.minutes"] = "Copied {0} min ago",
-        ["popup.copied.today"] = "Copied today at {0}",
-        ["popup.copied.yesterday"] = "Copied yesterday at {0}",
-        ["popup.copied.date"] = "Copied on {0} at {1}",
-        ["popup.formatting"] = "With formatting, Ctrl+Enter pastes plain text",
-        ["popup.imageText"] = "Ctrl+Enter pastes the text in the image",
-        ["item.files"] = "{0} files: ",
-        ["item.image"] = "Image, {0} × {1}",
-        ["key.space"] = "Space",
+        if (!string.IsNullOrEmpty(language) && Packs.ContainsKey(language))
+            return Packs.Keys.First(k => k.Equals(language, StringComparison.OrdinalIgnoreCase));
 
-        ["tray.open"] = "Open Pastebird",
-        ["tray.clear"] = "Clear history",
-        ["tray.settings"] = "Settings",
-        ["tray.exit"] = "Exit",
-        ["tray.update"] = "Update to version {0}",
+        // The Windows display language: exactly ("pt-BR") or just the language ("nl-BE" → "nl").
+        var ui = CultureInfo.CurrentUICulture;
+        foreach (var candidate in new[] { ui.Name, ui.TwoLetterISOLanguageName })
+        {
+            if (Packs.Keys.FirstOrDefault(k => k.Equals(candidate, StringComparison.OrdinalIgnoreCase)) is { } code)
+                return code;
+        }
+        return FallbackCode;
+    }
 
-        ["notify.running.title"] = "Pastebird is running in the background",
-        ["notify.running.text"] = "Press {0} to open your clipboard history.",
-        ["notify.hotkey.title"] = "Shortcut not available",
-        ["notify.hotkey.text"] = "{0} is already used by another program. Choose a different shortcut in Settings.",
-        ["notify.update.title"] = "Update available",
-        ["notify.update.text"] = "Pastebird {0} is available. Click here to update.",
-        ["notify.updating.title"] = "Updating Pastebird…",
-        ["notify.updating.text"] = "Pastebird restarts by itself in a moment.",
-        ["notify.updatefailed.title"] = "Update failed",
-        ["notify.updatefailed.text"] = "Click here to download the new version from GitHub.",
-        ["clear.confirm"] = "Do you want to clear the clipboard history? Pinned items stay.",
-        ["os.unsupported"] = "Pastebird requires Windows 11.\n\nThis version of Windows is not supported.",
-
-        ["settings.title"] = "Pastebird settings",
-        ["settings.autostart"] = "Start with Windows",
-        ["settings.autostart.desc"] = "Pastebird starts automatically in the background when you sign in.",
-        ["settings.autostart.denied"] = "Windows doesn't allow this. Turn Pastebird on in Task Manager → Startup apps.",
-        ["settings.autopaste"] = "Paste automatically",
-        ["settings.autopaste.desc"] = "Paste the chosen item straight into the window you were in. Shift\u2060+\u2060Enter only copies.",
-        ["settings.hotkey"] = "Shortcut",
-        ["settings.hotkey.desc"] = "Click and choose a new combination.",
-        ["settings.hotkey.press"] = "Press keys…",
-        ["settings.hotkey.modifier"] = "Use at least Ctrl, Alt or Win in the combination.",
-        ["settings.hotkey.taken"] = "{0} is already used by another program.",
-        ["settings.history"] = "History",
-        ["settings.history.desc"] = "Number of items Pastebird remembers, not counting pinned items. At most 50 of them are images.",
-        ["settings.history.items"] = "{0} items",
-        ["settings.keep"] = "Remove old items",
-        ["settings.keep.desc"] = "Removes items you copied longer ago, except pinned ones.",
-        ["settings.keep.always"] = "Never",
-        ["settings.keep.day"] = "After 1 day",
-        ["settings.keep.days"] = "After {0} days",
-        ["settings.updates"] = "Check for updates automatically",
-        ["settings.updates.desc"] = "Once a day, Pastebird asks GitHub whether there is a new version. An update is downloaded through pastebird.app, which only counts the old and new version number. Nothing about you or your clipboard is sent.",
-        ["settings.updates.check"] = "Check now",
-        ["settings.updates.checking"] = "Checking…",
-        ["settings.updates.current"] = "You have the latest version.",
-        ["settings.updates.offline"] = "Couldn't reach GitHub. Try again later.",
-        ["settings.updates.available"] = "Version {0} is available.",
-        ["settings.updates.install"] = "Update now",
-        ["settings.updates.installing"] = "Downloading update…",
-        ["settings.updates.failed"] = "Update failed. Try again or download it from GitHub.",
-        ["settings.clear"] = "Clear history",
-        ["settings.clear.desc"] = "Removes all saved clipboard items except pinned ones.",
-        ["settings.clear.button"] = "Clear…",
-        ["settings.language"] = "Language",
-        ["settings.language.desc"] = "Language of Pastebird's menus and windows.",
-        ["settings.language.system"] = "System default",
-
-        ["about.title"] = "About",
-        ["about.version"] = "Version {0}",
-        ["about.license"] = "MIT license",
-        ["about.createdBy"] = "Created by Patrick Speters",
-        ["about.local"] = "All data stays on this pc. No account, no cloud, no tracking.",
-        ["about.github"] = "Source code on GitHub",
-        ["about.donate"] = "Buy me a coffee",
-        ["about.whatsnew"] = "What's new",
-
-        ["notify.updated.title"] = "Pastebird is updated to version {0}",
-        ["notify.updated.text"] = "Click here to see what's new.",
-        ["whatsnew.title"] = "What's new in Pastebird",
-        ["whatsnew.updated"] = "Updated to version {0}",
-        ["whatsnew.english"] = "",
-        ["whatsnew.empty"] = "No changes to show.",
-        ["whatsnew.all"] = "All changes",
-        ["whatsnew.close"] = "Close",
-        ["whatsnew.culture"] = "en-US",
-        ["whatsnew.type.added"] = "New",
-        ["whatsnew.type.changed"] = "Changed",
-        ["whatsnew.type.fixed"] = "Fixed",
-        ["whatsnew.type.removed"] = "Removed",
-        ["whatsnew.type.security"] = "Security",
-    };
-
-    private static readonly Dictionary<string, string> Dutch = new()
+    /// <summary>
+    /// The languages built into Pastebird, plus files in %LOCALAPPDATA%\Pastebird\Languages, so a translator
+    /// can try a translation without building Pastebird. Such a file adds to or overrides a built-in language.
+    /// </summary>
+    private static Dictionary<string, Dictionary<string, string>> LoadPacks()
     {
-        ["popup.search"] = "Zoeken in klembord…",
-        ["popup.empty"] = "Nog niets gekopieerd. Alles wat je kopieert met Ctrl+C verschijnt hier.",
-        ["popup.noResults"] = "Geen resultaten",
-        ["popup.pin.tooltip"] = "Vastpinnen of losmaken (Ctrl+P)",
-        ["popup.remove.tooltip"] = "Verwijderen (Delete)",
-        ["popup.undo"] = "Verwijderd · Ctrl+Z zet terug",
-        ["popup.preview.more"] = "\n… en nog {0:N0} tekens",
-        ["popup.copied.now"] = "Zojuist gekopieerd",
-        ["popup.copied.minutes"] = "{0} min geleden gekopieerd",
-        ["popup.copied.today"] = "Vandaag om {0} gekopieerd",
-        ["popup.copied.yesterday"] = "Gisteren om {0} gekopieerd",
-        ["popup.copied.date"] = "Op {0} om {1} gekopieerd",
-        ["popup.formatting"] = "Met opmaak, Ctrl+Enter plakt platte tekst",
-        ["popup.imageText"] = "Ctrl+Enter plakt de tekst in de afbeelding",
-        ["item.files"] = "{0} bestanden: ",
-        ["item.image"] = "Afbeelding, {0} × {1}",
-        ["key.space"] = "Spatie",
+        var packs = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
 
-        ["tray.open"] = "Open Pastebird",
-        ["tray.clear"] = "Geschiedenis wissen",
-        ["tray.settings"] = "Instellingen",
-        ["tray.exit"] = "Afsluiten",
-        ["tray.update"] = "Bijwerken naar versie {0}",
+        var assembly = typeof(Loc).Assembly;
+        foreach (var name in assembly.GetManifestResourceNames())
+        {
+            if (!name.StartsWith("Languages.", StringComparison.Ordinal) || !name.EndsWith(".json", StringComparison.Ordinal)) continue;
+            using var stream = assembly.GetManifestResourceStream(name)!;
+            Add(name["Languages.".Length..^".json".Length], stream);
+        }
 
-        ["notify.running.title"] = "Pastebird draait op de achtergrond",
-        ["notify.running.text"] = "Druk op {0} om je klembordgeschiedenis te openen.",
-        ["notify.hotkey.title"] = "Sneltoets niet beschikbaar",
-        ["notify.hotkey.text"] = "{0} wordt al door een ander programma gebruikt. Kies een andere sneltoets via Instellingen.",
-        ["notify.update.title"] = "Update beschikbaar",
-        ["notify.update.text"] = "Pastebird {0} is beschikbaar. Klik hier om bij te werken.",
-        ["notify.updating.title"] = "Pastebird wordt bijgewerkt…",
-        ["notify.updating.text"] = "Pastebird start zo vanzelf opnieuw.",
-        ["notify.updatefailed.title"] = "Bijwerken mislukt",
-        ["notify.updatefailed.text"] = "Klik hier om de nieuwe versie van GitHub te downloaden.",
-        ["clear.confirm"] = "Wil je de klembordgeschiedenis wissen? Vastgepinde items blijven bewaard.",
-        ["os.unsupported"] = "Pastebird werkt alleen op Windows 11.\n\nDeze versie van Windows wordt niet ondersteund.",
+        try
+        {
+            var folder = Path.Combine(LocalStorage.Folder, "Languages");
+            if (Directory.Exists(folder))
+            {
+                foreach (var file in Directory.EnumerateFiles(folder, "*.json"))
+                {
+                    try
+                    {
+                        using var stream = File.OpenRead(file);
+                        Add(Path.GetFileNameWithoutExtension(file), stream);
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+                    {
+                        LocalStorage.Log(ex);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            LocalStorage.Log(ex);
+        }
 
-        ["settings.title"] = "Pastebird-instellingen",
-        ["settings.autostart"] = "Starten met Windows",
-        ["settings.autostart.desc"] = "Pastebird start automatisch op de achtergrond na het aanmelden.",
-        ["settings.autostart.denied"] = "Windows staat dit niet toe. Zet Pastebird aan via Taakbeheer → Opstart-apps.",
-        ["settings.autopaste"] = "Automatisch plakken",
-        ["settings.autopaste.desc"] = "Plak het gekozen item direct in het venster waar je was. Shift\u2060+\u2060Enter kopieert alleen.",
-        ["settings.hotkey"] = "Sneltoets",
-        ["settings.hotkey.desc"] = "Klik en kies een nieuwe combinatie.",
-        ["settings.hotkey.press"] = "Druk op toetsen…",
-        ["settings.hotkey.modifier"] = "Gebruik minstens Ctrl, Alt of Win in de combinatie.",
-        ["settings.hotkey.taken"] = "{0} is al in gebruik door een ander programma.",
-        ["settings.history"] = "Geschiedenis",
-        ["settings.history.desc"] = "Aantal items dat Pastebird onthoudt, vastgepinde niet meegeteld. Daarvan zijn er maximaal 50 afbeeldingen.",
-        ["settings.history.items"] = "{0} items",
-        ["settings.keep"] = "Oude items verwijderen",
-        ["settings.keep.desc"] = "Verwijdert items die je langer geleden kopieerde, behalve vastgepinde.",
-        ["settings.keep.always"] = "Nooit",
-        ["settings.keep.day"] = "Na 1 dag",
-        ["settings.keep.days"] = "Na {0} dagen",
-        ["settings.updates"] = "Automatisch op updates controleren",
-        ["settings.updates.desc"] = "Pastebird vraagt één keer per dag aan GitHub of er een nieuwe versie is. Een update wordt gedownload via pastebird.app, dat alleen het oude en nieuwe versienummer telt. Er wordt niets over jou of je klembord verstuurd.",
-        ["settings.updates.check"] = "Nu controleren",
-        ["settings.updates.checking"] = "Controleren…",
-        ["settings.updates.current"] = "Je hebt de nieuwste versie.",
-        ["settings.updates.offline"] = "GitHub is niet bereikbaar. Probeer het later opnieuw.",
-        ["settings.updates.available"] = "Versie {0} is beschikbaar.",
-        ["settings.updates.install"] = "Nu bijwerken",
-        ["settings.updates.installing"] = "Update downloaden…",
-        ["settings.updates.failed"] = "Bijwerken mislukt. Probeer het opnieuw of download hem van GitHub.",
-        ["settings.clear"] = "Geschiedenis wissen",
-        ["settings.clear.desc"] = "Verwijdert alle bewaarde klembord-items, behalve vastgepinde.",
-        ["settings.clear.button"] = "Wissen…",
-        ["settings.language"] = "Taal",
-        ["settings.language.desc"] = "Taal van de menu's en vensters van Pastebird.",
-        ["settings.language.system"] = "Systeemstandaard",
+        return packs;
 
-        ["about.title"] = "Over Pastebird",
-        ["about.version"] = "Versie {0}",
-        ["about.license"] = "MIT-licentie",
-        ["about.createdBy"] = "Gemaakt door Patrick Speters",
-        ["about.local"] = "Alle gegevens blijven op deze pc. Geen account, geen cloud, geen tracking.",
-        ["about.github"] = "Broncode op GitHub",
-        ["about.donate"] = "Trakteer me op een koffie",
-        ["about.whatsnew"] = "Wat is er nieuw",
+        void Add(string code, Stream stream)
+        {
+            if (!IsCulture(code)) return;
+            var strings = JsonSerializer.Deserialize(stream, PastebirdJson.Default.DictionaryStringString) ?? [];
+            if (packs.TryGetValue(code, out var existing))
+            {
+                foreach (var (key, value) in strings)
+                    existing[key] = value;
+            }
+            else
+            {
+                packs[code] = strings;
+            }
+        }
+    }
 
-        ["notify.updated.title"] = "Pastebird is bijgewerkt naar versie {0}",
-        ["notify.updated.text"] = "Klik hier om te zien wat er nieuw is.",
-        ["whatsnew.title"] = "Wat is er nieuw in Pastebird",
-        ["whatsnew.updated"] = "Bijgewerkt naar versie {0}",
-        ["whatsnew.english"] = "De wijzigingen zijn in het Engels beschreven.",
-        ["whatsnew.empty"] = "Geen wijzigingen om te tonen.",
-        ["whatsnew.all"] = "Alle wijzigingen",
-        ["whatsnew.close"] = "Sluiten",
-        ["whatsnew.culture"] = "nl-NL",
-        ["whatsnew.type.added"] = "Nieuw",
-        ["whatsnew.type.changed"] = "Gewijzigd",
-        ["whatsnew.type.fixed"] = "Opgelost",
-        ["whatsnew.type.removed"] = "Verwijderd",
-        ["whatsnew.type.security"] = "Beveiliging",
-    };
+    private static bool IsCulture(string code)
+    {
+        try { return CultureInfo.GetCultureInfo(code, predefinedOnly: true).Name.Length > 0; }
+        catch (CultureNotFoundException) { return false; }
+    }
 }
