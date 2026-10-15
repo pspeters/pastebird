@@ -14,6 +14,15 @@ release.ps1 copies this section into the GitHub release and stops when it is mis
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
 
+## [1.8.2] - 2026-10-15
+
+### Added
+- Pastebird can be translated into more languages. Every language is one text file, shared by the Windows and the Mac version. Want to help? The guide is in docs/TRANSLATING.md on GitHub.
+
+### Fixed
+- **What's new** and Settings no longer open behind the Pastebird popup.
+- Microsoft Store: after an update, Windows puts the Pastebird icon behind the arrow on the taskbar again. The update notification now says so, so you can drag it back.
+
 ## [1.8.1] - 2026-10-14
 
 ### Changed
