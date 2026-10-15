@@ -12,9 +12,9 @@ name: macOS build
 on:
   push:
     branches: ['**'] # not for version tags: the release workflow builds those
-    paths: ['mac/**', 'CHANGELOG.md', '.github/workflows/mac.yml']
+    paths: ['mac/**', 'CHANGELOG.md', 'src/Pastebird/Languages/**', '.github/workflows/mac.yml']
   pull_request:
-    paths: ['mac/**', '.github/workflows/mac.yml']
+    paths: ['mac/**', 'src/Pastebird/Languages/**', '.github/workflows/mac.yml']
   workflow_dispatch:
   workflow_call:
 

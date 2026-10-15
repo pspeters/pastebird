@@ -242,7 +242,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         storage.saveSettings(settings)
     }
 
-    func setLanguage(_ language: AppLanguage) {
+    func setLanguage(_ language: String?) {
         settings.language = language
         storage.saveSettings(settings)
         Loc.shared.apply(language)

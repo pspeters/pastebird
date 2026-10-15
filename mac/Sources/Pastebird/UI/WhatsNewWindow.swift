@@ -34,7 +34,7 @@ struct WhatsNewView: View {
             HStack {
                 Spacer()
                 Button(loc["whatsnew.all"]) {
-                    AppDelegate.openUrl("\(AppInfo.changelogUrl)?lang=\(Loc.shared.isDutch ? "nl" : "en")")
+                    AppDelegate.openUrl("\(AppInfo.changelogUrl)?lang=\(Loc.shared.locale.language.languageCode?.identifier ?? "en")")
                 }
                 Button(loc["whatsnew.close"], action: close)
                     .keyboardShortcut(.defaultAction)
@@ -93,7 +93,7 @@ struct WhatsNewView: View {
         parser.dateFormat = "yyyy-MM-dd"
         guard let parsed = parser.date(from: date) else { return nil }
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: loc["whatsnew.culture"])
+        formatter.locale = loc.locale
         formatter.dateFormat = "d MMMM yyyy"
         return formatter.string(from: parsed)
     }

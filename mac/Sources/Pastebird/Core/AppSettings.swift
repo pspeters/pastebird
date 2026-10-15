@@ -17,7 +17,9 @@ struct AppSettings: Codable {
 
     /// Unpinned items older than this many days are removed; 0 never removes them by age.
     var keepDays = 0
-    var language = AppLanguage.system
+
+    /// Code of the UI language ("en", "nl", …); nil follows the macOS language.
+    var language: String?
     var hotkeyModifiers = Hotkey.default.modifiers
     var hotkeyKey = Hotkey.default.keyCode
 
@@ -38,7 +40,13 @@ struct AppSettings: Codable {
         lastRunVersion = try c.decodeIfPresent(String.self, forKey: .lastRunVersion)
         maxItems = try c.decodeIfPresent(Int.self, forKey: .maxItems) ?? d.maxItems
         keepDays = try c.decodeIfPresent(Int.self, forKey: .keepDays) ?? d.keepDays
-        language = (try? c.decodeIfPresent(AppLanguage.self, forKey: .language)) ?? d.language
+        // Older versions stored "system", "english" or "dutch".
+        switch try? c.decodeIfPresent(String.self, forKey: .language) {
+        case "english": language = "en"
+        case "dutch": language = "nl"
+        case "system", "", nil: language = nil
+        case let code: language = code
+        }
         hotkeyModifiers = try c.decodeIfPresent(UInt32.self, forKey: .hotkeyModifiers) ?? d.hotkeyModifiers
         hotkeyKey = try c.decodeIfPresent(UInt32.self, forKey: .hotkeyKey) ?? d.hotkeyKey
     }

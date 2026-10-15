@@ -13,7 +13,7 @@ enum Screenshots {
         let dutch = args.count > i + 2 && args[i + 2] == "nl"
         let icon = args.firstIndex(of: "--icon").flatMap { $0 + 1 < args.count ? NSImage(contentsOfFile: args[$0 + 1]) : nil }
 
-        Loc.shared.apply(dutch ? .dutch : .english)
+        Loc.shared.apply(dutch ? "nl" : "en")
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         Renderer(folder: folder, dutch: dutch, logo: icon ?? NSApp.applicationIconImage).renderAll()
         return true

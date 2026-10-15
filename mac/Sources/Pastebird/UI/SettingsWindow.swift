@@ -16,7 +16,7 @@ final class HostingWindow: NSWindow {
         isReleasedWhenClosed = false
         self.titleKey = titleKey
         title = Loc.t(titleKey)
-        languageObserver = Loc.shared.$language.dropFirst().sink { [weak self] _ in
+        languageObserver = Loc.shared.$code.dropFirst().sink { [weak self] _ in
             DispatchQueue.main.async { self.map { $0.title = Loc.t($0.titleKey) } }
         }
         center()
@@ -89,9 +89,10 @@ final class SettingsModel: ObservableObject {
         set { app.setKeepDays(newValue); objectWillChange.send() }
     }
 
-    var language: AppLanguage {
-        get { app.settings.language }
-        set { app.setLanguage(newValue); objectWillChange.send() }
+    /// Code of the chosen language, or "" for the system default (also for a language that is gone).
+    var language: String {
+        get { Loc.languages.first { $0.code == app.settings.language }?.code ?? "" }
+        set { app.setLanguage(newValue.isEmpty ? nil : newValue); objectWillChange.send() }
     }
 
     var checkForUpdates: Bool {
@@ -196,12 +197,8 @@ struct SettingsView: View {
                     }
                 }
                 row("settings.language", loc["settings.language.desc"]) {
-                    picker(Binding(get: { model.language }, set: { model.language = $0 }), AppLanguage.allCases) {
-                        switch $0 {
-                        case .system: return Loc.t("settings.language.system")
-                        case .english: return "English"
-                        case .dutch: return "Nederlands"
-                        }
+                    picker(Binding(get: { model.language }, set: { model.language = $0 }), [""] + Loc.languages.map(\.code)) { code in
+                        Loc.languages.first { $0.code == code }?.name ?? Loc.t("settings.language.system")
                     }
                 }
             }

@@ -11,7 +11,8 @@ public sealed record UiLanguage(string Code, string Name);
 /// <summary>
 /// UI strings, one JSON file per language in Languages\ (see docs/TRANSLATING.md). XAML binds to the indexer
 /// (<c>{Binding [key], Source={x:Static core:Loc.Instance}}</c>), so switching language updates open windows
-/// immediately. Code uses <see cref="T(string)"/>. Missing strings fall back to English.
+/// immediately. Code uses <see cref="T(string)"/>. Missing strings fall back to English. Keys ending in ".mac"
+/// are for the Mac version, which reads the same files.
 /// </summary>
 public sealed class Loc : INotifyPropertyChanged
 {

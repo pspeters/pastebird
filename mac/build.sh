@@ -51,6 +51,9 @@ cp Resources/Info.plist "$APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" -c "Set :CFBundleVersion $VERSION" "$APP/Contents/Info.plist"
 # Shown in "What's new" after an update (Core/Changelog.swift).
 cp "$ROOT/CHANGELOG.md" "$APP/Contents/Resources/CHANGELOG.md"
+# UI languages, shared with Windows (Core/Localization.swift, docs/TRANSLATING.md).
+mkdir -p "$APP/Contents/Resources/Languages"
+cp "$ROOT"/src/Pastebird/Languages/*.json "$APP/Contents/Resources/Languages/"
 iconutil -c icns Resources/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"
 
 if [ -n "${SIGN_IDENTITY:-}" ]; then
