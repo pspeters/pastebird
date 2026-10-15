@@ -145,7 +145,9 @@ public partial class App : Application
 
         if (updated)
         {
-            ShowNotification(Loc.T("notify.updated.title", AppInfo.Version), Loc.T("notify.updated.text"),
+            // A Store update makes Windows hide the tray icon again (see TrayIconSettings).
+            bool iconHidden = AutoStart.IsPackaged && TrayIconSettings.WasHiddenByUpdate();
+            ShowNotification(Loc.T("notify.updated.title", AppInfo.Version), Loc.T(iconHidden ? "notify.updated.hidden" : "notify.updated.text"),
                 () => ShowWhatsNew(previousVersion, afterUpdate: true));
         }
         if (firstRun)
@@ -253,8 +255,7 @@ public partial class App : Application
             _settingsWindow = new SettingsWindow(this);
             _settingsWindow.Closed += (_, _) => { _settingsWindow = null; ResumeHotkey(); };
         }
-        _settingsWindow.Show();
-        _settingsWindow.Activate();
+        BringToFront(_settingsWindow);
     }
 
     /// <summary>Applies the autostart setting and returns the state that actually took effect.</summary>
@@ -297,7 +298,7 @@ public partial class App : Application
         _storage.SaveSettings(Settings);
     }
 
-    public void SetLanguage(AppLanguage language)
+    public void SetLanguage(string? language)
     {
         Settings.Language = language;
         _storage.SaveSettings(Settings);
@@ -373,8 +374,21 @@ public partial class App : Application
             releases = Changelog.Load();
         _whatsNewWindow = new WhatsNewWindow(releases, afterUpdate);
         _whatsNewWindow.Closed += (_, _) => _whatsNewWindow = null;
-        _whatsNewWindow.Show();
-        _whatsNewWindow.Activate();
+        BringToFront(_whatsNewWindow);
+    }
+
+    /// <summary>
+    /// Shows a window above everything else. The popup goes away first: it is topmost and would cover the window.
+    /// Briefly making the window topmost also works when Windows doesn't let Pastebird take the focus,
+    /// for example after clicking a notification.
+    /// </summary>
+    private void BringToFront(Window window)
+    {
+        _popup?.HidePopup();
+        window.Show();
+        window.Topmost = true;
+        window.Activate();
+        window.Topmost = false;
     }
 
     // ---------------------------------------------------------------- updates
