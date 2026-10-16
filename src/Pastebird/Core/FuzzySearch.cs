@@ -31,6 +31,12 @@ public static class FuzzySearch
         return matches.ConvertAll(m => m.Item);
     }
 
+    /// <summary>
+    /// At most this many characters may sit between two letters of a subsequence match, so the letters of a
+    /// term scattered over a long text ("nissewaard" across a whole e-mail) don't count as a match.
+    /// </summary>
+    private const int MaxGap = 5;
+
     /// <summary>Returns -1 for no match; substring matches always outrank subsequence matches.</summary>
     internal static int Score(string text, string term)
     {
@@ -38,22 +44,29 @@ public static class FuzzySearch
         if (index >= 0)
             return 1000 + (IsWordStart(text, index) ? 200 : 0) - Math.Min(index, 300);
 
-        int score = 0, matched = 0, last = -1, streak = 0;
-        for (int i = 0; i < text.Length && matched < term.Length; i++)
+        // Try every place the term's first letter occurs and keep the best compact match.
+        int best = -1;
+        for (int start = text.IndexOf(term[0]); start >= 0; start = text.IndexOf(term[0], start + 1))
         {
-            if (text[i] != term[matched]) continue;
-
-            if (last == i - 1) score += 5 * ++streak;
-            else
+            int score = IsWordStart(text, start) ? 10 : 0, matched = 1, last = start, streak = 0;
+            for (int i = start + 1; i < text.Length && matched < term.Length && i - last - 1 <= MaxGap; i++)
             {
-                streak = 0;
-                if (last >= 0) score -= Math.Min(i - last - 1, 10);
+                if (text[i] != term[matched]) continue;
+
+                if (last == i - 1) score += 5 * ++streak;
+                else
+                {
+                    streak = 0;
+                    score -= i - last - 1;
+                }
+                if (IsWordStart(text, i)) score += 10;
+                last = i;
+                matched++;
             }
-            if (IsWordStart(text, i)) score += 10;
-            last = i;
-            matched++;
+            if (matched == term.Length)
+                best = Math.Max(best, Math.Clamp(100 + score, 1, 600));
         }
-        return matched == term.Length ? Math.Clamp(100 + score, 1, 600) : -1;
+        return best;
     }
 
     private static bool IsWordStart(string text, int i) => i == 0 || !char.IsLetterOrDigit(text[i - 1]);

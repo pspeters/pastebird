@@ -23,30 +23,40 @@ enum FuzzySearch {
         return matches.map(\.item)
     }
 
+    /// At most this many characters may sit between two letters of a subsequence match, so the letters of a
+    /// term scattered over a long text ("nissewaard" across a whole e-mail) don't count as a match.
+    private static let maxGap = 5
+
     /// Returns -1 for no match; substring matches always outrank subsequence matches.
     static func score(_ text: [Unicode.Scalar], _ term: [Unicode.Scalar]) -> Int {
         if let index = indexOf(term, in: text) {
             return 1000 + (isWordStart(text, index) ? 200 : 0) - min(index, 300)
         }
+        guard let first = term.first else { return -1 }
 
-        var score = 0, matched = 0, last = -1, streak = 0
-        var i = 0
-        while i < text.count && matched < term.count {
-            defer { i += 1 }
-            if text[i] != term[matched] { continue }
+        // Try every place the term's first letter occurs and keep the best compact match.
+        var best = -1
+        for start in text.indices where text[start] == first {
+            var score = isWordStart(text, start) ? 10 : 0, matched = 1, last = start, streak = 0
+            var i = start + 1
+            while i < text.count && matched < term.count && i - last - 1 <= maxGap {
+                defer { i += 1 }
+                if text[i] != term[matched] { continue }
 
-            if last == i - 1 {
-                streak += 1
-                score += 5 * streak
-            } else {
-                streak = 0
-                if last >= 0 { score -= min(i - last - 1, 10) }
+                if last == i - 1 {
+                    streak += 1
+                    score += 5 * streak
+                } else {
+                    streak = 0
+                    score -= i - last - 1
+                }
+                if isWordStart(text, i) { score += 10 }
+                last = i
+                matched += 1
             }
-            if isWordStart(text, i) { score += 10 }
-            last = i
-            matched += 1
+            if matched == term.count { best = max(best, min(max(100 + score, 1), 600)) }
         }
-        return matched == term.count ? min(max(100 + score, 1), 600) : -1
+        return best
     }
 
     private static func indexOf(_ term: [Unicode.Scalar], in text: [Unicode.Scalar]) -> Int? {
