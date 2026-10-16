@@ -14,6 +14,14 @@ release.ps1 copies this section into the GitHub release and stops when it is mis
 The website (pastebird.app/changelog.php) shows this file from the main branch, up to the latest released version.
 -->
 
+## [1.8.3] - 2026-10-16
+
+### Added
+- Settings tells you when Windows can't read text in images, and how to install that. As soon as it can, Pastebird reads your images, without a restart.
+
+### Fixed
+- Searching no longer shows long texts that merely contain the letters of your search somewhere, far apart.
+
 ## [1.8.2] - 2026-10-15
 
 ### Added
