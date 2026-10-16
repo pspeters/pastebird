@@ -69,6 +69,11 @@ public partial class SettingsWindow : Window
         ClearButton.Click += (_, _) => _app.ClearHistory(confirmOwner: this);
         WhatsNewButton.Click += (_, _) => _app.ShowWhatsNew();
         GitHubButton.Click += (_, _) => OpenUrl(AppInfo.GitHubUrl);
+        TextRecognitionButton.Click += (_, _) => OpenUrl("ms-settings:regionlanguage");
+
+        // Checked again whenever the window gets focus, e.g. after installing text recognition in Windows Settings.
+        Activated += (_, _) =>
+            TextRecognitionCard.Visibility = _app.CheckTextRecognition() ? Visibility.Collapsed : Visibility.Visible;
         DonateButton.Click += (_, _) => OpenUrl(AppInfo.DonateUrl);
 
         HotkeyBox.GotKeyboardFocus += (_, _) =>

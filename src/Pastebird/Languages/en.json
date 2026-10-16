@@ -104,6 +104,9 @@
   "settings.language": "Language",
   "settings.language.desc": "Language of Pastebird's menus and windows.",
   "settings.language.system": "System default",
+  "settings.ocr": "Text in images",
+  "settings.ocr.desc": "Windows can't read text in images yet, so images can't be found by the words on them. Install the language features of your language in Windows Settings (Time & language → Language & region → Language options), or ask your IT department. Pastebird then reads your images by itself.",
+  "settings.ocr.button": "Language settings",
 
   "about.title": "About",
   "about.version": "Version {0}",

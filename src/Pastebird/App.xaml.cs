@@ -37,6 +37,7 @@ public partial class App : Application
     private DispatcherTimer _saveTimer = null!;
     private readonly DispatcherTimer _expireTimer = new() { Interval = TimeSpan.FromHours(1) };
     private readonly SemaphoreSlim _recognizing = new(1, 1);
+    private bool _recognizingMissing;
     private IntPtr _pasteTarget;
     private bool _hotkeySuspended;
 
@@ -106,7 +107,7 @@ public partial class App : Application
 
         _monitor = new ClipboardMonitor(_messages);
         _monitor.Captured += OnCaptured;
-        _ = RecognizeMissingTextAsync();
+        _ = RecognizeMissingTextAsync(TimeSpan.FromSeconds(30)); // not while Windows is still starting
 
         _popup = new PopupWindow(_history, _storage);
         _popup.ItemChosen += OnItemChosen;
@@ -188,6 +189,7 @@ public partial class App : Application
         var foreground = PasteService.CaptureTarget();
         _pasteTarget = allowPaste ? foreground : IntPtr.Zero;
         _popup!.ShowPopup(placement, foreground);
+        CheckTextRecognition();
     }
 
     private void OnCaptured(ClipItem copied, ClipData? data)
@@ -204,7 +206,7 @@ public partial class App : Application
         await _recognizing.WaitAsync();
         try
         {
-            if (item.ImageText is not null || !_history.Items.Contains(item)) return;
+            if (item.ImageText is not null || !_history.Items.Contains(item) || !TextRecognition.IsAvailable) return;
             var text = await Task.Run(async () => _storage.LoadData(item)?.Png is { } png ? await TextRecognition.RecognizeAsync(png) : null);
             if (text is not null)
                 _history.SetImageText(item, text);
@@ -219,12 +221,34 @@ public partial class App : Application
         }
     }
 
-    /// <summary>Recognizes the text in images that don't have it yet (copied with an older version, or before a language was installed).</summary>
-    private async Task RecognizeMissingTextAsync()
+    /// <summary>
+    /// Recognizes the text in images that don't have it yet (copied with an older version, or before Windows had
+    /// text recognition). At start, and again when the popup or Settings opens, so text recognition installed
+    /// while Pastebird runs is used without a restart.
+    /// </summary>
+    private async Task RecognizeMissingTextAsync(TimeSpan delay = default)
     {
-        await Task.Delay(TimeSpan.FromSeconds(30)); // not while Windows is still starting
-        foreach (var item in _history.Items.Where(i => i.Kind == ClipKind.Image && i.ImageText is null).ToList())
-            await RecognizeTextAsync(item);
+        if (_recognizingMissing) return;
+        _recognizingMissing = true;
+        try
+        {
+            await Task.Delay(delay);
+            if (!TextRecognition.IsAvailable) return;
+            foreach (var item in _history.Items.Where(i => i.Kind == ClipKind.Image && i.ImageText is null).ToList())
+                await RecognizeTextAsync(item);
+        }
+        finally
+        {
+            _recognizingMissing = false;
+        }
+    }
+
+    /// <summary>Whether Windows can read text in images; checks again, and reads the images that were skipped once it can.</summary>
+    public bool CheckTextRecognition()
+    {
+        bool available = TextRecognition.IsAvailable;
+        if (available) _ = RecognizeMissingTextAsync();
+        return available;
     }
 
     private void OnItemChosen(ClipItem item, bool paste, bool keepFormatting)

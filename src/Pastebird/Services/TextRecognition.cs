@@ -13,19 +13,40 @@ internal static class TextRecognition
 {
     private const int MaxChars = 20_000;
 
-    private static readonly Lazy<OcrEngine?> Engine = new(() =>
+    private static OcrEngine? _engine;
+
+    /// <summary>
+    /// Whether Windows can read text in images. Checked again each time until it can, so text recognition
+    /// installed while Pastebird runs is picked up without a restart.
+    /// </summary>
+    public static bool IsAvailable => Engine is not null;
+
+    private static OcrEngine? Engine
     {
-        try { return OcrEngine.TryCreateFromUserProfileLanguages(); }
-        catch (Exception ex) { LocalStorage.Log(ex); return null; }
-    });
+        get
+        {
+            if (_engine is not null) return _engine;
+            try
+            {
+                // The user's own languages first; otherwise any installed one (most read Latin script fine).
+                _engine = OcrEngine.TryCreateFromUserProfileLanguages()
+                    ?? OcrEngine.AvailableRecognizerLanguages.Select(OcrEngine.TryCreateFromLanguage).FirstOrDefault(e => e is not null);
+            }
+            catch (Exception ex)
+            {
+                LocalStorage.Log(ex);
+            }
+            return _engine;
+        }
+    }
 
     /// <summary>
     /// The text in the image, one line per line of text; "" when there is none. Null when Windows has no text
-    /// recognition for the user's languages, so it can be tried again later.
+    /// recognition, so it can be tried again later.
     /// </summary>
     public static async Task<string?> RecognizeAsync(byte[] png)
     {
-        if (Engine.Value is not { } engine) return null;
+        if (Engine is not { } engine) return null;
 
         using var stream = new MemoryStream(png).AsRandomAccessStream();
         var decoder = await BitmapDecoder.CreateAsync(stream);

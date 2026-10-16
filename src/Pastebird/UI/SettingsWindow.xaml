@@ -119,6 +119,22 @@
                 </Grid>
             </Border>
 
+            <!-- Only shown while Windows can't read text in images -->
+            <Border x:Name="TextRecognitionCard" Style="{StaticResource Card}" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding [settings.ocr], Source={x:Static core:Loc.Instance}}" />
+                        <TextBlock Style="{StaticResource Description}" Text="{Binding [settings.ocr.desc], Source={x:Static core:Loc.Instance}}" />
+                    </StackPanel>
+                    <Button x:Name="TextRecognitionButton" Grid.Column="1" Width="170" VerticalAlignment="Center"
+                            Content="{Binding [settings.ocr.button], Source={x:Static core:Loc.Instance}}" />
+                </Grid>
+            </Border>
+
             <Border x:Name="UpdatesCard" Style="{StaticResource Card}">
                 <StackPanel>
                     <Grid>

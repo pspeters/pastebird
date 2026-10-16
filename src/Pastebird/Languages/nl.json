@@ -99,6 +99,9 @@
   "settings.language": "Taal",
   "settings.language.desc": "Taal van de menu's en vensters van Pastebird.",
   "settings.language.system": "Systeemstandaard",
+  "settings.ocr": "Tekst in afbeeldingen",
+  "settings.ocr.desc": "Windows kan nog geen tekst in afbeeldingen lezen, dus je kunt afbeeldingen niet vinden op de woorden erin. Installeer de taalfuncties van je taal in de Windows-instellingen (Tijd en taal → Taal en regio → Taalopties) of vraag het je IT-afdeling. Pastebird leest je afbeeldingen daarna vanzelf.",
+  "settings.ocr.button": "Taalinstellingen",
 
   "about.title": "Over Pastebird",
   "about.version": "Versie {0}",
